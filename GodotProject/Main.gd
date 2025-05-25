@@ -75,6 +75,16 @@ var capy_types := {
 		"bounce": 0.05,  # Very stable
 		"friction": 8.0, # Very stable
 		"gravity_scale": 2.0  # Falls normally
+	},
+	"StickyCapy": {
+		"scene": null,  # Will be set in _ready()
+		"height": 55.0,  # Slightly smaller
+		"mass": 0.9,     # Slightly lighter
+		"bounce": 0.15,  # Moderate bounce
+		"friction": 5.0, # High friction for stickiness
+		"gravity_scale": 2.1,  # Normal fall speed
+		"sticky_range": 80.0,  # Special: Extended sticky range
+		"sticky_strength": 2.5  # Special: Stronger connections
 	}
 }
 
@@ -93,6 +103,7 @@ func _ready():
 	capy_types["BabyCapy"]["scene"] = BabyCapy
 	capy_types["LargeCapy"]["scene"] = LargeCapy
 	capy_types["SleepingCapy"]["scene"] = SleepingCapy
+	capy_types["StickyCapy"]["scene"] = StickyCapy 
 	
 	# Create physical ground
 	create_ground()
@@ -665,13 +676,26 @@ func create_sticky_connection(lower_capy, upper_capy):
 	var upper_rb = find_rigidbody(upper_capy)
 	
 	if lower_rb and upper_rb:
-		# Calculate horizontal offset between capys - key for edge stacking
-		var horizontal_offset = abs(upper_rb.global_position.x - lower_rb.global_position.x)
+		# Check if either capy is a StickyCapy for enhanced stickiness
+		var lower_type = get_capy_type_name(lower_capy)
+		var upper_type = get_capy_type_name(upper_capy)
+		var has_sticky_capy = (lower_type == "StickyCapy" or upper_type == "StickyCapy")
 		
-		# Calculate offset as a factor of capy width
+		# Calculate horizontal offset between capys
+		var horizontal_offset = abs(upper_rb.global_position.x - lower_rb.global_position.x)
 		var offset_factor = horizontal_offset / capy_height
 		
-		# Create pin joint (acts like glue)
+		# Enhanced sticky range and strength for StickyCapy
+		var effective_sticky_range = center_sticky_range
+		var sticky_multiplier = 1.0
+		
+		if has_sticky_capy:
+			# StickyCapy gets much larger effective range and stronger connection
+			effective_sticky_range = capy_types["StickyCapy"]["sticky_range"]
+			sticky_multiplier = capy_types["StickyCapy"]["sticky_strength"]
+			print("StickyCapy detected - Enhanced connection!")
+		
+		# Create pin joint
 		var joint = PinJoint2D.new()
 		add_child(joint)
 		
@@ -682,29 +706,74 @@ func create_sticky_connection(lower_capy, upper_capy):
 		joint.node_a = lower_rb.get_path()
 		joint.node_b = upper_rb.get_path()
 		
-		# Calculate stickiness (much reduced for off-center placements)
-		var stickiness = 1.0 - clamp(horizontal_offset / center_sticky_range, 0, 0.95)
+		# Calculate stickiness with StickyCapy bonus
+		var base_stickiness = 1.0 - clamp(horizontal_offset / effective_sticky_range, 0, 0.95)
+		var stickiness = base_stickiness * sticky_multiplier
+		
+		# StickyCapy reduces edge penalty significantly
+		var edge_penalty_factor = edge_penalty
+		if has_sticky_capy:
+			edge_penalty_factor *= 0.3  # Much less penalty for StickyCapy
 		
 		# Apply edge penalty for off-center connections
 		if offset_factor > 0.5:
-			stickiness *= (1.0 - ((offset_factor - 0.5) * edge_penalty))
+			stickiness *= (1.0 - ((offset_factor - 0.5) * edge_penalty_factor))
 		
-		# Calculate dynamic joint softness - MUCH higher elasticity based on offset
+		# Calculate joint softness - StickyCapy creates firmer connections
 		var height_factor = float(capys_stack.size()) / 8.0
-		var offset_softness = offset_factor * stack_elasticity * 2.0  # Major impact from offset
+		var offset_softness = offset_factor * stack_elasticity
+		
+		# StickyCapy reduces elasticity for more stable connections
+		if has_sticky_capy:
+			offset_softness *= 0.5  # Much firmer connection
+		
 		var base_softness = 0.3 + (1.0 - stickiness) * stack_elasticity + offset_softness
 		var dynamic_softness = base_softness + height_factor
 		
-		# Configure joint properties - much more elastic for off-center connections
-		joint.softness = clamp(dynamic_softness, 0.3, 0.95)
-		joint.bias = max(0.2, 0.3 - offset_factor * 0.2)  # Lower bias (stability) for off-center
+		# StickyCapy gets additional firmness bonus
+		if has_sticky_capy:
+			dynamic_softness *= 0.7  # More stable joint
+		
+		# Configure joint properties
+		joint.softness = clamp(dynamic_softness, 0.1, 0.95)  # Lower minimum for StickyCapy
+		joint.bias = max(0.2, 0.3 - offset_factor * 0.1)  # Better stability
+		
+		# StickyCapy gets enhanced bias for stability
+		if has_sticky_capy:
+			joint.bias = max(joint.bias, 0.4)  # Higher minimum bias
+		
 		joint.disable_collision = false
 		
 		# Store the joint reference
 		stack_joints.append(joint)
 		
 		# Debug output
-		print("Joint created with softness: ", joint.softness, " (offset: ", offset_factor, ")")
+		var connection_type = "Enhanced" if has_sticky_capy else "Normal"
+		print(connection_type, " joint created with softness: ", joint.softness, " bias: ", joint.bias, " (offset: ", offset_factor, ")")
+
+func apply_sticky_capy_effects(capy_instance, capy_type_name):
+	if capy_type_name != "StickyCapy":
+		return
+	
+	var rb = find_rigidbody(capy_instance)
+	if not rb:
+		return
+	
+	# StickyCapy gets special landing behavior - it "grabs" onto other capys better
+	rb.connect("body_entered", self, "_on_sticky_capy_contact", [capy_instance])
+
+# ADD this callback function for StickyCapy contact detection:
+func _on_sticky_capy_contact(body, sticky_capy):
+	# When StickyCapy touches another capy during drop, reduce its velocity for better sticking
+	if is_capy_dropping and current_capy == sticky_capy:
+		var contact_capy = find_capy_owner(body)
+		if contact_capy in capys_stack:
+			var rb = find_rigidbody(sticky_capy)
+			if rb:
+				# Reduce velocity for better "grabbing" effect
+				rb.linear_velocity *= 0.6
+				rb.angular_velocity *= 0.4
+				print("StickyCapy grabbing effect activated!")
 
 # IMPROVED: Helper function to make transition to static smooth
 func _stabilize_capy(capy):
@@ -790,10 +859,11 @@ func get_capy_type_to_spawn():
 	
 	# After threshold, randomly choose from all types with weights
 	var capy_choices = [
-		{"type": "BaseCapy", "weight": 30},    # Still common
-		{"type": "BabyCapy", "weight": 25},    # Light and bouncy
+		{"type": "BaseCapy", "weight": 25},    # Reduced weight
+		{"type": "BabyCapy", "weight": 20},    # Light and bouncy
 		{"type": "LargeCapy", "weight": 20},   # Heavy and stable
-		{"type": "SleepingCapy", "weight": 25} # Very stable
+		{"type": "SleepingCapy", "weight": 20}, # Very stable
+		{"type": "StickyCapy", "weight": 15}
 	]
 	
 	# Calculate total weight
@@ -821,6 +891,8 @@ func get_capy_type_name(capy_instance):
 		return "LargeCapy"
 	elif scene_path.ends_with("SleepingCapy.tscn"):
 		return "SleepingCapy"
+	elif scene_path.ends_with("StickyCapy.tscn"):  # ADD THIS LINE
+		return "StickyCapy"
 	else:
 		return "BaseCapy"
 
@@ -843,6 +915,9 @@ func apply_capy_physics(capy_instance, capy_type_name):
 	rb.contacts_reported = 8
 	rb.collision_layer = 1
 	rb.collision_mask = 1	
+	
+	# Apply special effects for StickyCapy
+	apply_sticky_capy_effects(capy_instance, capy_type_name)
 	
 # IMPROVED: Debug visualization
 func _draw():

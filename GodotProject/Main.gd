@@ -379,28 +379,51 @@ func check_stack_stability(delta):
 	if tipping_over:
 		return
 	
-	# Calculate imbalance
+	# Check for StickyCapy in stack for stability bonus
+	var sticky_count = 0
+	for capy in capys_stack:
+		if get_capy_type_name(capy) == "StickyCapy":
+			sticky_count += 1
+	
+	# Calculate imbalance with StickyCapy bonus
+	var base_threshold = balance_threshold
+	var effective_threshold = base_threshold
+	
+	# Each StickyCapy significantly increases the balance threshold
+	if sticky_count > 0:
+		effective_threshold = base_threshold + (sticky_count * 0.4)  # Major threshold increase
+		effective_threshold = min(effective_threshold, 0.9)  # Cap at 90% imbalance tolerance
+	
 	var imbalance = abs(stack_balance_factor)
 	
-	# If stack is imbalanced, accumulate time
-	if imbalance > balance_threshold:
+	# If stack is imbalanced beyond the effective threshold, accumulate time
+	if imbalance > effective_threshold:
 		imbalance_duration += delta
 		
-		# Calculate tip probability based on:
-		# 1. How imbalanced the stack is
-		# 2. How long it's been imbalanced
-		# 3. Height of the stack
-		
-		var tip_chance = (imbalance - balance_threshold) * 5  # Base chance from imbalance
+		# Calculate tip probability with StickyCapy resistance
+		var tip_chance = (imbalance - effective_threshold) * 5  # Base chance from imbalance
 		tip_chance *= sqrt(capys_stack.size()) * 0.4  # Increase with height
 		tip_chance *= min(imbalance_duration, 3.0) * 0.5  # Increase with time imbalanced
 		
-		# Edge case: Force tipping if extremely unbalanced
-		if imbalance > 0.65 or (imbalance > 0.5 and capys_stack.size() >= 3):
-			tip_chance = 100  # Guarantee tipping
+		# StickyCapy provides major tip resistance
+		if sticky_count > 0:
+			var resistance_factor = 1.0 - (sticky_count * 0.6)  # Up to 60% tip resistance per StickyCapy
+			resistance_factor = max(resistance_factor, 0.1)  # Always some small chance
+			tip_chance *= resistance_factor
+			print("StickyCapy tip resistance: ", (1.0 - resistance_factor) * 100, "%")
+		
+		# Edge case: Force tipping if extremely unbalanced (but much higher threshold with StickyCapy)
+		var extreme_threshold = 0.65 
+		var severe_threshold = 0.5
+		if sticky_count > 0:
+			extreme_threshold = 0.95
+			severe_threshold = 0.85
+				
+		if imbalance > extreme_threshold or (imbalance > severe_threshold and capys_stack.size() >= 3 and sticky_count == 0):
+			tip_chance = 100  # Guarantee tipping (but only without StickyCapy protection)
 		
 		# Debug visualization of tip chance
-		print("Imbalance: ", imbalance, " Tip chance: ", tip_chance * 0.1, "%")
+		print("Imbalance: ", imbalance, " Effective threshold: ", effective_threshold, " Tip chance: ", tip_chance * 0.1, "%")
 		
 		# Roll for tipping
 		if randf() < tip_chance * 0.01:
@@ -497,11 +520,19 @@ func calculate_stack_balance():
 	
 	var stack_center_x = 0.0
 	var total_weight = 0.0
+	var sticky_stabilization = 0.0
 	
-	# Calculate weighted center of mass
+	# Calculate weighted center of mass with StickyCapy stabilization
 	for i in range(capys_stack.size()):
 		var capy = capys_stack[i]
-		var weight = pow(2.5, i)  # Increased from 2.0 - Higher capys have MUCH more impact on balance
+		var capy_type = get_capy_type_name(capy)
+		
+		# StickyCapy provides stabilization effect to the stack
+		if capy_type == "StickyCapy":
+			# Each StickyCapy reduces overall imbalance
+			sticky_stabilization += 0.3  # Significant stabilization per StickyCapy
+		
+		var weight = pow(2.5, i)  # Higher capys have more impact on balance
 		stack_center_x += capy.position.x * weight
 		total_weight += weight
 	
@@ -513,12 +544,20 @@ func calculate_stack_balance():
 	var screen_width = get_viewport_rect().size.x
 	
 	# Normalize the balance factor between -1 and 1
-	# -1 means leaning far left, 0 means balanced, 1 means leaning far right
-	# Made more sensitive by using a smaller divisor (0.15 instead of 0.2)
-	stack_balance_factor = clamp((stack_center_x - base_x) / (screen_width * 0.15), -1, 1)
+	var raw_balance = (stack_center_x - base_x) / (screen_width * 0.15)
+	
+	# Apply StickyCapy stabilization - reduces imbalance significantly
+	raw_balance *= (1.0 - min(sticky_stabilization, 0.8))  # Max 80% reduction
+	
+	stack_balance_factor = clamp(raw_balance, -1, 1)
 	
 	# Update the stack height for game logic
 	stack_height = capys_stack.size()
+	
+	# Debug output for StickyCapy stabilization
+	if sticky_stabilization > 0:
+		print("StickyCapy stabilization active: ", sticky_stabilization, " - Balance factor: ", stack_balance_factor)
+
 
 func drop_current_capy():
 	is_capy_dropping = true
@@ -630,15 +669,27 @@ func finalize_capy_placement():
 		
 		# Check if placement is very off-center before accepting
 		var off_center_factor = 0.0
+		var has_sticky_involved = false
 		
 		if capys_stack.size() > 0:
 			var top_capy = capys_stack.back()
 			var horizontal_offset = abs(current_capy.position.x - top_capy.position.x)
 			off_center_factor = horizontal_offset / capy_height
 			
-			# NEW: If extremely off-center (more than 80% of capy width),
-			# immediately trigger destabilization
-			if off_center_factor > 0.8 and capys_stack.size() >= 2:
+			# Check if either the current capy or the one below is StickyCapy
+			var current_type = get_capy_type_name(current_capy)
+			var below_type = get_capy_type_name(top_capy)
+			has_sticky_involved = (current_type == "StickyCapy" or below_type == "StickyCapy")
+			
+			# ENHANCED: StickyCapy gets much more forgiveness for edge placement
+			var tip_threshold = 0.8  # Normal threshold
+			if has_sticky_involved:
+				tip_threshold = 1.3  # StickyCapy can handle much more extreme edges
+				print("StickyCapy edge tolerance active - threshold: ", tip_threshold)
+			
+			# NEW: If extremely off-center (beyond threshold), trigger destabilization
+			# BUT StickyCapy gets major exception
+			if off_center_factor > tip_threshold and capys_stack.size() >= 2:
 				# Calculate which direction it's off-center
 				var direction = sign(current_capy.position.x - top_capy.position.x)
 				
@@ -670,7 +721,6 @@ func finalize_capy_placement():
 		# Recalculate the stack balance
 		calculate_stack_balance()
 
-# IMPROVED: Create a joint connection between two capybaras for stickiness
 func create_sticky_connection(lower_capy, upper_capy):
 	var lower_rb = find_rigidbody(lower_capy)
 	var upper_rb = find_rigidbody(upper_capy)
@@ -710,37 +760,39 @@ func create_sticky_connection(lower_capy, upper_capy):
 		var base_stickiness = 1.0 - clamp(horizontal_offset / effective_sticky_range, 0, 0.95)
 		var stickiness = base_stickiness * sticky_multiplier
 		
-		# StickyCapy reduces edge penalty significantly
+		# ENHANCED: StickyCapy gets major edge penalty reduction
 		var edge_penalty_factor = edge_penalty
 		if has_sticky_capy:
-			edge_penalty_factor *= 0.3  # Much less penalty for StickyCapy
+			edge_penalty_factor *= 0.1  # Massive reduction in edge penalty (was 0.3)
+			# StickyCapy maintains high stickiness even at extreme edges
+			stickiness = max(stickiness, 0.7)  # Minimum 70% stickiness for StickyCapy
 		
-		# Apply edge penalty for off-center connections
+		# Apply edge penalty for off-center connections (much reduced for StickyCapy)
 		if offset_factor > 0.5:
 			stickiness *= (1.0 - ((offset_factor - 0.5) * edge_penalty_factor))
 		
-		# Calculate joint softness - StickyCapy creates firmer connections
+		# Calculate joint softness - StickyCapy creates much firmer connections
 		var height_factor = float(capys_stack.size()) / 8.0
 		var offset_softness = offset_factor * stack_elasticity
 		
-		# StickyCapy reduces elasticity for more stable connections
+		# StickyCapy gets major elasticity reduction for super stable connections
 		if has_sticky_capy:
-			offset_softness *= 0.5  # Much firmer connection
+			offset_softness *= 0.2  # Much firmer connection (was 0.5)
 		
 		var base_softness = 0.3 + (1.0 - stickiness) * stack_elasticity + offset_softness
 		var dynamic_softness = base_softness + height_factor
 		
-		# StickyCapy gets additional firmness bonus
+		# StickyCapy gets additional major firmness bonus
 		if has_sticky_capy:
-			dynamic_softness *= 0.7  # More stable joint
+			dynamic_softness *= 0.4  # Much more stable joint (was 0.7)
 		
 		# Configure joint properties
-		joint.softness = clamp(dynamic_softness, 0.1, 0.95)  # Lower minimum for StickyCapy
+		joint.softness = clamp(dynamic_softness, 0.05, 0.95)  # Even lower minimum for StickyCapy
 		joint.bias = max(0.2, 0.3 - offset_factor * 0.1)  # Better stability
 		
-		# StickyCapy gets enhanced bias for stability
+		# StickyCapy gets enhanced bias for maximum stability
 		if has_sticky_capy:
-			joint.bias = max(joint.bias, 0.4)  # Higher minimum bias
+			joint.bias = max(joint.bias, 0.6)  # Much higher minimum bias (was 0.4)
 		
 		joint.disable_collision = false
 		
@@ -750,6 +802,7 @@ func create_sticky_connection(lower_capy, upper_capy):
 		# Debug output
 		var connection_type = "Enhanced" if has_sticky_capy else "Normal"
 		print(connection_type, " joint created with softness: ", joint.softness, " bias: ", joint.bias, " (offset: ", offset_factor, ")")
+
 
 func apply_sticky_capy_effects(capy_instance, capy_type_name):
 	if capy_type_name != "StickyCapy":
@@ -863,7 +916,7 @@ func get_capy_type_to_spawn():
 		{"type": "BabyCapy", "weight": 20},    # Light and bouncy
 		{"type": "LargeCapy", "weight": 20},   # Heavy and stable
 		{"type": "SleepingCapy", "weight": 20}, # Very stable
-		{"type": "StickyCapy", "weight": 15}
+		{"type": "StickyCapy", "weight": 20}
 	]
 	
 	# Calculate total weight

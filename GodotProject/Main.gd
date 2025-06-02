@@ -1,23 +1,23 @@
 extends Node2D
 
 # Settings
-export var capy_height := 60.0
-export var spawn_delay := 1.0
-export var ground_margin := 100.0
-export var move_speed := 100.0
-export var start_height := 300.0
-export var max_horizontal_movement := 100.0
+@export var capy_height := 60.0
+@export var spawn_delay := 1.0
+@export var ground_margin := 100.0
+@export var move_speed := 100.0
+@export var start_height := 300.0
+@export var max_horizontal_movement := 100.0
 # Balance physics settings - MODIFIED FOR MORE REALISTIC PHYSICS
-export var wobble_factor := 1.5  # Increased for more pronounced wobbling
-export var center_sticky_range := 10.0  # Decreased from 15.0 - Much narrower sticky range
-export var max_sticky_force := 30.0  # Decreased from 50.0 - Lower joint force
-export var balance_threshold := 0.25  # Decreased from 0.4 - Much lower threshold for imbalance
-export var auto_center_force := 1.0  # Decreased from 2.0 - Weaker auto-centering
-export var wobble_frequency := 0.4  # Increased for more dynamic wobbling
-export var wobble_amplitude := 1.5  # Increased for more dramatic movement
-export var stack_elasticity := 0.35  # Increased for more elastic connections
-export var edge_penalty := 2.0  # NEW: Penalty multiplier for off-center stacking
-export var base_capy_count_threshold := 3  # How many BaseCapys before random spawning
+@export var wobble_factor := 1.5  # Increased for more pronounced wobbling
+@export var center_sticky_range := 10.0  # Decreased from 15.0 - Much narrower sticky range
+@export var max_sticky_force := 30.0  # Decreased from 50.0 - Lower joint force
+@export var balance_threshold := 0.25  # Decreased from 0.4 - Much lower threshold for imbalance
+@export var auto_center_force := 1.0  # Decreased from 2.0 - Weaker auto-centering
+@export var wobble_frequency := 0.4  # Increased for more dynamic wobbling
+@export var wobble_amplitude := 1.5  # Increased for more dramatic movement
+@export var stack_elasticity := 0.35  # Increased for more elastic connections
+@export var edge_penalty := 2.0  # NEW: Penalty multiplier for off-center stacking
+@export var base_capy_count_threshold := 3  # How many BaseCapys before random spawning
 
 # References
 var current_capy = null
@@ -32,7 +32,7 @@ var LargeCapy = preload("res://LargeCapy.tscn")
 var SleepingCapy = preload("res://SleepingCapy.tscn")
 var StickyCapy = preload("res://StickyCapy.tscn")
 var is_capy_dropping := false
-var ground_body = null  # Reference to the ground physics body
+var ground_body = null  # RefCounted to the ground physics body
 var wobble_time := 0.0  # Time accumulator for wobble effect
 var stack_joints := []  # Store joints between capys
 var stack_balance_factor := 0.0  # Current balance state of the stack (-1 to 1, 0 is balanced)
@@ -118,7 +118,7 @@ func _ready():
 
 # Add function to place the base capybara at the center ground
 func place_base_capy():
-	var base_capy = BaseCapy.instance()
+	var base_capy = BaseCapy.instantiate()
 	add_child(base_capy)
 	
 	# Position it above the center of the ground - moved higher up for better visibility
@@ -128,11 +128,12 @@ func place_base_capy():
 	var rb = find_rigidbody(base_capy)
 	if rb:
 		rb.gravity_scale = 2.5  # Increased for faster dropping
-		rb.mode = RigidBody2D.MODE_RIGID
-		rb.bounce = 0.1
-		rb.friction = 4.0  # Decreased for less stickiness
+		rb.freeze_mode = RigidBody2D.FREEZE_MODE_KINEMATIC
+		rb.physics_material_override = PhysicsMaterial.new()
+		rb.physics_material_override.bounce = 0.1
+		rb.physics_material_override.friction = 4.0
 		rb.contact_monitor = true
-		rb.contacts_reported = 8
+		rb.max_contacts_reported = 8
 		rb.collision_layer = 1
 		rb.collision_mask = 1
 		# Add slightly stronger initial velocity
@@ -154,7 +155,7 @@ func create_ground():
 	# Add collision shape
 	var ground_shape = CollisionShape2D.new()
 	var shape = RectangleShape2D.new()
-	shape.extents = Vector2(get_viewport_rect().size.x / 2, 10)  # Width of screen, 20px height
+	shape.size = Vector2(get_viewport_rect().size.x, 20)
 	ground_shape.shape = shape
 	ground_body.add_child(ground_shape)
 
@@ -224,7 +225,7 @@ func _process(delta):
 	# Handle horizontal movement
 	if current_capy and not is_capy_dropping:
 		# Drop capy when space pressed or screen touched
-		if Input.is_action_just_pressed("ui_accept") or (OS.has_feature("mobile") and Input.get_touch_count() > 0):
+		if Input.is_action_just_pressed("ui_accept") or (DisplayServer.is_touchscreen_available() and Input.get_connected_joypads().size() == 0 and Input.is_action_just_pressed("ui_accept")):
 			drop_current_capy()
 			return
 		
@@ -249,7 +250,7 @@ func _process(delta):
 	if capys_stack.size() > 1:
 		apply_stack_wobble(delta)
 		check_stack_stability(delta)  # Pass delta to track time
-		update()  # Force redraw for debug visualization
+		queue_redraw
 
 func update_camera(delta):
 	var camera = $Camera2D
@@ -288,7 +289,7 @@ func update_camera(delta):
 			target_camera_position.y = ground_level - (viewport_height * 0.4)
 			
 		# Fast camera movement for initial drop
-		camera.position = camera.position.linear_interpolate(
+		camera.position = camera.position.lerp(
 			target_camera_position, 
 			delta * camera_speed * 4  # Much faster for initial setup
 		)
@@ -368,7 +369,7 @@ func update_camera(delta):
 		adaptive_speed *= (1 + (distance / 300))
 	
 	# 7. Apply camera movement
-	camera.position = camera.position.linear_interpolate(
+	camera.position = camera.position.lerp(
 		target_camera_position, 
 		delta * adaptive_speed
 	)
@@ -451,7 +452,7 @@ func destabilize_stack():
 		var rb = find_rigidbody(capy)
 		if rb:
 			# Make all capys dynamic again
-			rb.mode = RigidBody2D.MODE_RIGID
+			rb.freeze_mode = RigidBody2D.FREEZE_MODE_KINEMATIC
 			rb.gravity_scale = 1.3  # Increased gravity during toppling
 			
 			# Higher capys get stronger sideways impulse
@@ -471,7 +472,7 @@ func destabilize_stack():
 	timer.wait_time = 4.0  # Longer time to allow player to see the collapse
 	timer.one_shot = true
 	add_child(timer)
-	timer.connect("timeout", self, "_on_reset_timer_timeout")
+	timer.connect("timeout", Callable(self, "_on_reset_timer_timeout"))
 	timer.start()
 
 # Reset the game after stack tips over
@@ -487,7 +488,7 @@ func apply_stack_wobble(delta):
 	for i in range(capys_stack.size()):
 		var capy = capys_stack[i]
 		var rb = find_rigidbody(capy)
-		if rb and rb.mode == RigidBody2D.MODE_RIGID:
+		if rb and rb.freeze_mode == RigidBody2D.FREEZE_MODE_KINEMATIC:
 			# The higher up in the stack, the more effect
 			var height_factor = float(i) / max(1, capys_stack.size() - 1)
 			
@@ -506,7 +507,7 @@ func apply_stack_wobble(delta):
 			var centering_force = -stack_balance_factor * auto_center_force * height_factor * stability_factor
 			
 			# Apply forces - increased overall effect
-			rb.apply_impulse(Vector2.ZERO, Vector2(centering_force + wobble_noise, 0) * delta * 70)
+			rb.apply_impulse(Vector2(centering_force + wobble_noise, 0) * delta * 70, Vector2.ZERO)
 			
 			# Apply random rotational impulse for more natural movement
 			if i > 0: # Don't rotate the base capy
@@ -571,8 +572,13 @@ func drop_current_capy():
 		# Apply type-specific gravity and physics
 		rb.gravity_scale = capy_data.gravity_scale
 		rb.mass = capy_data.mass
-		rb.bounce = capy_data.bounce
-		rb.friction = capy_data.friction
+		
+		# Create or update physics material
+		if rb.physics_material_override == null:
+			rb.physics_material_override = PhysicsMaterial.new()
+		
+		rb.physics_material_override.bounce = capy_data.bounce
+		rb.physics_material_override.friction = capy_data.friction
 		
 		# Initial drop velocity (adjusted by type)
 		var base_velocity = 170
@@ -583,7 +589,7 @@ func drop_current_capy():
 			
 		rb.linear_velocity = Vector2(0, base_velocity)
 		rb.contact_monitor = true
-		rb.contacts_reported = 8
+		rb.max_contacts_reported = 8
 		rb.collision_layer = 1
 		rb.collision_mask = 1
 
@@ -604,7 +610,7 @@ func _physics_process(delta):
 		
 		# Debug printing when no RigidBody is found
 		if not rb:
-			print("Warning: No RigidBody found for current_capy")
+			print("Warning: No RigidBody3D found for current_capy")
 			is_capy_dropping = false
 			current_capy = null
 			# Try to spawn a new capy
@@ -813,7 +819,7 @@ func apply_sticky_capy_effects(capy_instance, capy_type_name):
 		return
 	
 	# StickyCapy gets special landing behavior - it "grabs" onto other capys better
-	rb.connect("body_entered", self, "_on_sticky_capy_contact", [capy_instance])
+	rb.body_entered.connect(_on_sticky_capy_contact.bind(capy_instance))
 
 # ADD this callback function for StickyCapy contact detection:
 func _on_sticky_capy_contact(body, sticky_capy):
@@ -838,14 +844,16 @@ func _stabilize_capy(capy):
 		# Special handling for base capy
 		if stack_position == 0:
 			# Make base capy NOT fully static, but very stable
-			rb.mode = RigidBody2D.MODE_RIGID
+			rb.freeze_mode = RigidBody2D.FREEZE_MODE_KINEMATIC
+			rb.freeze = false  # Keep it dynamic but stable
 			rb.gravity_scale = 0.5  # Some gravity to keep it grounded
 			rb.mass = 5.0  # Much heavier base
 			rb.linear_damp = 10.0  # Strong damping for stability
 			rb.angular_damp = 10.0  # Prevent rotation
 		else:
 			# All other capys remain dynamic with reduced gravity
-			rb.mode = RigidBody2D.MODE_RIGID
+			rb.freeze_mode = RigidBody2D.FREEZE_MODE_KINEMATIC
+			rb.freeze = false  # Keep them dynamic
 			rb.gravity_scale = 0.45
 			
 			# Dynamic mass based on position in stack
@@ -878,7 +886,7 @@ func spawn_capy():
 	if capy_type_name == "BaseCapy":
 		base_capy_count += 1
 	
-	var capy_instance = capy_scene.instance()
+	var capy_instance = capy_scene.instantiate()
 	add_child(capy_instance)
 	
 	# Set position and initial direction
@@ -892,14 +900,15 @@ func spawn_capy():
 	var rb = find_rigidbody(capy_instance)
 	if rb:
 		rb.gravity_scale = 0.0  # No gravity while moving horizontally
-		rb.mode = RigidBody2D.MODE_RIGID
+		rb.freeze_mode = RigidBody2D.FREEZE_MODE_KINEMATIC
+		rb.freeze = false  # Keep it dynamic
 		rb.linear_damp = 0.25
 		rb.angular_damp = 4.5
 		
 		# Apply initial velocity
 		rb.linear_velocity = Vector2(move_speed * (1 if moving_right else -1), 0)
 	else:
-		print("Error: No RigidBody found in new capy")
+		print("Error: No RigidBody2D found in new capy")
 	
 	current_capy = capy_instance
 	print("New ", capy_type_name, " spawned successfully")
@@ -913,7 +922,7 @@ func get_capy_type_to_spawn():
 	# After threshold, randomly choose from all types with weights
 	var capy_choices = [
 		{"type": "BaseCapy", "weight": 25},    # Reduced weight
-		{"type": "BabyCapy", "weight": 20},    # Light and bouncy
+		{"type": "BabyCapy", "weight": 20},    # Light3D and bouncy
 		{"type": "LargeCapy", "weight": 20},   # Heavy and stable
 		{"type": "SleepingCapy", "weight": 20}, # Very stable
 		{"type": "StickyCapy", "weight": 20}
@@ -937,7 +946,7 @@ func get_capy_type_to_spawn():
 
 # Get capybara type from instance
 func get_capy_type_name(capy_instance):
-	var scene_path = capy_instance.filename
+	var scene_path = capy_instance.scene_file_path
 	if scene_path.ends_with("BabyCapy.tscn"):
 		return "BabyCapy"
 	elif scene_path.ends_with("LargeCapy.tscn"):
@@ -959,13 +968,15 @@ func apply_capy_physics(capy_instance, capy_type_name):
 	
 	# Apply type-specific physics
 	rb.mass = capy_data.mass
-	rb.bounce = capy_data.bounce
-	rb.friction = capy_data.friction
+	if rb.physics_material_override == null:
+		rb.physics_material_override = PhysicsMaterial.new()
+		rb.physics_material_override.bounce = capy_data.bounce
+		rb.physics_material_override.friction = capy_data.friction
 	rb.gravity_scale = capy_data.gravity_scale
 	
 	# Configure common properties
 	rb.contact_monitor = true
-	rb.contacts_reported = 8
+	rb.max_contacts_reported = 8
 	rb.collision_layer = 1
 	rb.collision_mask = 1	
 	
@@ -976,9 +987,9 @@ func apply_capy_physics(capy_instance, capy_type_name):
 func _draw():
 	
 	# Draw ground line
-	draw_line(Vector2(0, ground_level), Vector2(get_viewport_rect().size.x, ground_level), Color.white, 2.0)
+	draw_line(Vector2(0, ground_level), Vector2(get_viewport_rect().size.x, ground_level), Color.WHITE, 2.0)
 	
 
 func _input(event):
-	if event is InputEventKey and event.pressed and event.scancode == KEY_R:
+	if event is InputEventKey and event.pressed and event.keycode == KEY_R:
 		get_tree().reload_current_scene()

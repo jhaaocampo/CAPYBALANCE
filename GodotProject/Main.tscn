@@ -1,10 +1,25 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=2 format=3 uid="uid://buu6w8pk80q3f"]
 
-[ext_resource path="res://Main.gd" type="Script" id=1]
+[ext_resource type="Script" uid="uid://ccy7cd22fhbj3" path="res://Main.gd" id="1"]
 
 [node name="Main" type="Node2D"]
-script = ExtResource( 1 )
+script = ExtResource("1")
+capy_height = null
+spawn_delay = null
+ground_margin = null
+move_speed = null
+start_height = null
+max_horizontal_movement = null
+wobble_factor = null
+center_sticky_range = null
+max_sticky_force = null
+balance_threshold = null
+auto_center_force = null
+wobble_frequency = null
+wobble_amplitude = null
+stack_elasticity = null
+edge_penalty = null
+base_capy_count_threshold = null
 
 [node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2( 357, 642 )
-current = true
+position = Vector2(357, 642)

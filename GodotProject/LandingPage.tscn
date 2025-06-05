@@ -1,0 +1,81 @@
+[gd_scene load_steps=7 format=3 uid="uid://dio66r5h6282k"]
+
+[ext_resource type="Texture2D" uid="uid://bc3yiesalklmd" path="res://Background.png" id="1_fe6hs"]
+[ext_resource type="Script" uid="uid://cm74rd08yc1w2" path="res://LandingPage.gd" id="1_ur3vi"]
+[ext_resource type="Texture2D" uid="uid://k0dctlkvytgf" path="res://capybalancelogo.png" id="2_ur3vi"]
+[ext_resource type="Texture2D" uid="uid://qtpr141yk62m" path="res://start button.png" id="3_ar278"]
+[ext_resource type="Texture2D" uid="uid://vxtgskqapp4e" path="res://leave button.png" id="4_l42u6"]
+[ext_resource type="Texture2D" uid="uid://bohxlb1va11bs" path="res://settings button.png" id="5_flxnd"]
+
+[node name="LandingPage" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ur3vi")
+
+[node name="Background" type="TextureRect" parent="."]
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -1208.0
+offset_top = 135.0
+offset_right = -1208.0
+offset_bottom = 135.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.00516, 0.994561)
+texture = ExtResource("1_fe6hs")
+expand_mode = 3
+
+[node name="Logo" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = -1197.0
+offset_top = 161.0
+offset_right = 828.0
+offset_bottom = 2186.0
+scale = Vector2(0.34556, 0.351661)
+texture = ExtResource("2_ur3vi")
+
+[node name="StartButtonContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = -1077.0
+offset_top = 854.0
+offset_right = 543.0
+offset_bottom = 2474.0
+scale = Vector2(0.286685, 0.24869)
+theme_override_constants/separation = 30
+
+[node name="StartButton" type="TextureButton" parent="StartButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+texture_normal = ExtResource("3_ar278")
+
+[node name="LeaveButtonContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = -995.0
+offset_top = 1070.0
+offset_right = 625.0
+offset_bottom = 1820.0
+scale = Vector2(0.180942, 0.179372)
+
+[node name="LeaveButton" type="TextureButton" parent="LeaveButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+texture_normal = ExtResource("4_l42u6")
+
+[node name="SettingsButtonContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = -660.0
+offset_top = 237.0
+offset_right = 960.0
+offset_bottom = 987.0
+scale = Vector2(0.0739555, 0.0727116)
+
+[node name="SettingsButton" type="TextureButton" parent="SettingsButtonContainer"]
+layout_mode = 2
+texture_normal = ExtResource("5_flxnd")

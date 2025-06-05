@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://2qv47ukpm61l"]
 
 [ext_resource type="Script" uid="uid://dql8huxj7fhg7" path="res://Scoreboard.gd" id="1_3b2b5"]
-[ext_resource type="FontFile" uid="uid://cvt48jt6vj8i3" path="res://press_start_2p/PressStart2P.ttf" id="1_b3bc3"]
+[ext_resource type="FontFile" uid="uid://dv6rxjsqf5lyn" path="res://PressStart2P.ttf" id="2_3b2b5"]
 
 [node name="UI" type="CanvasLayer"]
 layer = 0
@@ -23,7 +23,7 @@ offset_right = 548.0
 offset_bottom = 293.0
 theme_override_colors/font_color = Color(1, 0.788235, 0.0823529, 1)
 theme_override_constants/line_spacing = 25
-theme_override_fonts/font = ExtResource("1_b3bc3")
+theme_override_fonts/font = ExtResource("2_3b2b5")
 theme_override_font_sizes/font_size = 55
 text = "Stacks
 0"
@@ -36,7 +36,7 @@ offset_top = 444.0
 offset_right = 677.0
 offset_bottom = 549.0
 theme_override_constants/line_spacing = 25
-theme_override_fonts/font = ExtResource("1_b3bc3")
+theme_override_fonts/font = ExtResource("2_3b2b5")
 theme_override_font_sizes/font_size = 35
 text = "High Score
 0"

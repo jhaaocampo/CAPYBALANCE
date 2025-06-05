@@ -1,9 +1,9 @@
 extends Control
 
-# Button references
-@onready var start_button = $StartButtonContainer/StartButton
-@onready var settings_button = $SettingsButtonContainer/SettingsButton
-@onready var leave_button = $LeaveButtonContainer/LeaveButton
+# Button references - Changed to TextureButton
+@onready var start_button = $StartButtonContainer/StartButton as TextureButton
+@onready var settings_button = $SettingsButtonContainer/SettingsButton as TextureButton
+@onready var leave_button = $LeaveButtonContainer/LeaveButton as TextureButton
 @onready var logo = $Logo
 @onready var background = $Background
 
@@ -14,6 +14,10 @@ const SETTINGS_SCENE = "res://scenes/SettingsScene.tscn"
 # Design resolution (the resolution you designed your UI for)
 const DESIGN_WIDTH = 1080.0
 const DESIGN_HEIGHT = 1920.0
+
+# Pulsing animation variables
+var pulse_tween: Tween
+var is_pulsing = false
 
 func _ready():
 	# Set this Control to fill the entire screen
@@ -44,6 +48,9 @@ func _ready():
 	
 	# Set up mobile-specific settings
 	setup_mobile_settings()
+	
+	# Start the pulsing animation after a short delay
+	call_deferred("start_pulsing_animation")
 
 func setup_mobile_settings():
 	# Connect to viewport size changes
@@ -78,6 +85,50 @@ func _on_viewport_size_changed():
 	# Ensure size matches design resolution
 	size = Vector2(DESIGN_WIDTH, DESIGN_HEIGHT)
 
+# Pulsing animation functions
+func start_pulsing_animation():
+	if is_pulsing:
+		return
+	
+	is_pulsing = true
+	pulse_tween = create_tween()
+	pulse_tween.set_loops()  # Make it loop infinitely
+	
+	# Create a smooth pulsing effect
+	# Scale up slightly, then back down
+	pulse_tween.tween_property(start_button, "scale", Vector2(1.05, 1.05), 0.8)
+	pulse_tween.tween_property(start_button, "scale", Vector2(1.0, 1.0), 0.8)
+	
+	# Set ease type for smoother animation
+	pulse_tween.tween_callback(func(): pass)  # This helps with the looping
+
+func stop_pulsing_animation():
+	if pulse_tween:
+		pulse_tween.kill()
+	is_pulsing = false
+	
+	# Ensure button returns to normal scale
+	var reset_tween = create_tween()
+	reset_tween.tween_property(start_button, "scale", Vector2.ONE, 0.2)
+
+# Alternative pulsing animation with glow effect (if you want more visual impact)
+func start_enhanced_pulsing():
+	if is_pulsing:
+		return
+	
+	is_pulsing = true
+	pulse_tween = create_tween()
+	pulse_tween.set_loops()
+	
+	# Create a sequence of animations
+	pulse_tween.tween_property(start_button, "scale", Vector2(1.08, 1.08), 0.6)
+	pulse_tween.tween_property(start_button, "modulate:a", 0.9, 0.6)
+	pulse_tween.tween_property(start_button, "scale", Vector2(1.0, 1.0), 0.6)
+	pulse_tween.tween_property(start_button, "modulate:a", 1.0, 0.6)
+	
+	# Add a brief pause between pulses
+	pulse_tween.tween_delay(0.3)
+
 # Alternative scaling method - try this if the above doesn't work
 func setup_alternative_scaling():
 	# Set the Control to use the full screen
@@ -90,14 +141,23 @@ func setup_alternative_scaling():
 	offset_right = 0
 	offset_bottom = 0
 
-# Button visual state functions
-func _on_button_pressed(button: Button):
+# Button visual state functions - Updated for TextureButton
+func _on_button_pressed(button: TextureButton):
+	# Temporarily stop pulsing when button is pressed
+	if button == start_button and is_pulsing:
+		stop_pulsing_animation()
+	
 	var tween = create_tween()
 	tween.tween_property(button, "scale", Vector2(0.95, 0.95), 0.1)
 
-func _on_button_released(button: Button):
+func _on_button_released(button: TextureButton):
 	var tween = create_tween()
 	tween.tween_property(button, "scale", Vector2.ONE, 0.1)
+	
+	# Restart pulsing after button release if it's the start button
+	if button == start_button:
+		# Create a simple timer to restart pulsing
+		get_tree().create_timer(0.3).timeout.connect(start_pulsing_animation)
 
 func _on_button_hover():
 	play_hover_sound()
@@ -108,6 +168,7 @@ func _on_button_unhover():
 # Button action functions
 func _on_start_button_pressed():
 	play_button_sound()
+	stop_pulsing_animation()  # Stop pulsing when transitioning
 	start_game_transition()
 
 func _on_settings_button_pressed():
@@ -126,13 +187,8 @@ func play_hover_sound():
 	pass
 
 func start_game_transition():
-	start_button.disabled = true
-	settings_button.disabled = true
-	leave_button.disabled = true
-	
-	var tween = create_tween()
-	tween.tween_property(self, "modulate:a", 0.0, 0.5)
-	tween.tween_callback(func(): get_tree().change_scene_to_file(GAME_SCENE))
+	# Instant scene change - no gray screen
+	get_tree().change_scene_to_file(GAME_SCENE)
 
 func show_quit_confirmation():
 	var dialog = AcceptDialog.new()
@@ -154,3 +210,8 @@ func _on_quit_dialog_action(action):
 
 func _quit_game():
 	get_tree().quit()
+
+# Cleanup function
+func _exit_tree():
+	if pulse_tween:
+		pulse_tween.kill()

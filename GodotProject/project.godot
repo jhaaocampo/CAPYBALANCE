@@ -26,6 +26,7 @@ window/size/window_height_override=1280
 window/stretch/mode="canvas_items"
 window/handheld/orientation=1
 window/size/fullscreen=true
+window/hdr_2d=true
 
 [gui]
 

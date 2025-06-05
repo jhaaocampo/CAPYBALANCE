@@ -76,8 +76,45 @@ func _ready():
 
 # Override _process to handle countdown timer
 func _process(delta):
-	super._process(delta)  # Call parent _process
+	# INTEGRATED FIX: Handle game over timer and restart - same as Main.gd
+	update_camera(delta)
+	wobble_time += delta
 	
+	# Handle game over timer and restart
+	if tipping_over:
+		game_over_timer += delta
+		if game_over_timer >= game_over_delay:
+			get_tree().reload_current_scene()
+		return  # Don't process anything else during game over
+	
+	# Check for fallen capybaras FIRST - before any other logic
+	check_for_fallen_capys()
+	
+	# Exit early if game over was triggered
+	if tipping_over:
+		return
+	
+	# Only spawn if not tipping over and no current capy
+	if current_capy == null and not is_capy_dropping:
+		spawn_timer += delta
+		if spawn_timer >= spawn_delay:
+			spawn_capy()
+			spawn_timer = 0.0
+	
+	# Handle input and movement - prevent input during game over
+	if current_capy and not is_capy_dropping:
+		if Input.is_action_just_pressed("ui_accept"):
+			drop_current_capy()
+			return
+		
+		handle_horizontal_movement(delta)
+	
+	if capys_stack.size() > 1:
+		apply_stack_wobble(delta)
+		check_stack_stability(delta)
+		apply_height_based_global_stability(delta)
+	
+	# HEIGHT CHALLENGE SPECIFIC: Handle countdown timer
 	if challenge_active and challenge_started and scoreboard:
 		time_remaining -= delta
 		
@@ -95,11 +132,210 @@ func _process(delta):
 		if time_remaining <= 0.0:
 			end_height_challenge()
 
-# Override finalize_capy_placement 
-func finalize_capy_placement():
-	super.finalize_capy_placement()
+# Override _physics_process with integrated fixes
+func _physics_process(delta):
+	# INTEGRATED FIX: Exit early if game over - same as Main.gd
+	if tipping_over:
+		return
+		
+	if current_capy and is_capy_dropping:
+		var rb = find_rigidbody(current_capy)
+		if not rb:
+			is_capy_dropping = false
+			current_capy = null
+			spawn_timer = spawn_delay
+			return
+		
+		var landed = (current_capy.position.y >= ground_level - capy_height/2 or 
+					 (capys_stack.size() > 0 and check_stack_collision(rb)) or 
+					 (rb.linear_velocity.length() < 20 and is_near_stack(current_capy)) or 
+					 (capys_stack.size() == 0 and is_contacting_something(rb)))
+		
+		if landed:
+			finalize_capy_placement()
+			
+	if capys_stack.size() > 5:
+		reinforce_foundation_continuously(delta)
+		
+	if capys_stack.size() > 6:
+		apply_foundation_anchoring(delta)
+
+# Override check_for_fallen_capys with integrated fixes
+func check_for_fallen_capys():
+	# INTEGRATED FIX: Same logic as Main.gd
+	if tipping_over:  # Already triggered, don't check again
+		return
+		
+	if capys_stack.size() <= 1:  # Only base capy or empty
+		return
+		
+	# Check all capybaras for various failure conditions
+	for i in range(capys_stack.size()):
+		var capy = capys_stack[i]
+		if not is_instance_valid(capy):
+			continue
+		
+		var rb = find_rigidbody(capy)
+		if not rb:
+			continue
+			
+		# Check if any capy (including base) has fallen to ground level
+		if capy.position.y >= ground_level - capy_height * 0.2:
+			print("Game Over: Capybara hit ground at position ", capy.position.y, " (ground: ", ground_level, ")")
+			trigger_game_over()
+			return
+			
+		# Check for extreme horizontal displacement from stack center
+		var base_x = capys_stack[0].position.x if capys_stack.size() > 0 else start_x_position
+		var horizontal_distance = abs(capy.position.x - base_x)
+		var max_allowed_distance = capy_height * 3.0  # Reasonable horizontal limit
+		
+		if horizontal_distance > max_allowed_distance:
+			print("Game Over: Capybara displaced too far horizontally: ", horizontal_distance)
+			trigger_game_over()
+			return
+			
+		# Check for extreme velocities (capybara flying off)
+		if rb.linear_velocity.length() > 800:  # Very high velocity
+			print("Game Over: Capybara moving too fast: ", rb.linear_velocity.length())
+			trigger_game_over()
+			return
+
+# Override check_stack_stability with integrated fixes
+func check_stack_stability(delta):
+	# INTEGRATED FIX: Same logic as Main.gd
+	if capys_stack.size() <= 1 or tipping_over:
+		return
 	
-	# Emit stack changed signal
+	var imbalance = abs(stack_balance_factor)
+	# Enhanced threshold calculation
+	var base_threshold = 0.8
+	var height_bonus = min(capys_stack.size() * 0.12, 0.6)
+	var foundation_bonus = min(capys_stack.size() * 0.05, 0.3)
+	var stability_threshold = base_threshold + height_bonus + foundation_bonus
+	
+	# Check for rapid movement
+	var top_capy = capys_stack.back()
+	var rb = find_rigidbody(top_capy)
+	var rapid_movement = false
+	if rb:
+		var velocity_threshold = 500 + min(capys_stack.size() * 40, 300)
+		var angular_threshold = 12.0 + min(capys_stack.size() * 0.8, 8.0)
+		rapid_movement = rb.linear_velocity.length() > velocity_threshold or abs(rb.angular_velocity) > angular_threshold
+	
+	# Additional check: if any capybara is moving extremely fast, trigger immediately
+	for capy in capys_stack:
+		var capy_rb = find_rigidbody(capy)
+		if capy_rb and capy_rb.linear_velocity.length() > 1000:  # Emergency threshold
+			print("Game Over: Emergency velocity threshold exceeded")
+			trigger_game_over()
+			return
+	
+	if imbalance > stability_threshold or rapid_movement:
+		imbalance_duration += delta
+		var grace_period = 4.0 + min(capys_stack.size() * 0.8, 6.0)
+		if imbalance_duration > grace_period:
+			print("Game Over: Stack stability threshold exceeded after grace period")
+			destabilize_stack()
+	else:
+		imbalance_duration = max(0, imbalance_duration - delta * 3.0)
+
+# Override drop_current_capy with integrated fixes
+func drop_current_capy():
+	# INTEGRATED FIX: Prevent dropping during game over - same as Main.gd
+	if tipping_over:
+		print("Prevented drop during game over")
+		return
+		
+	is_capy_dropping = true
+	var capy_type_name = get_capy_type_name(current_capy)
+	var capy_data = capy_types[capy_type_name]
+	
+	var rb = find_rigidbody(current_capy)
+	if rb:
+		setup_rigidbody(rb, capy_type_name, false)
+		
+		# Reduce velocity for early capys to prevent knockover
+		var base_velocity = {"BabyCapy": 140, "LargeCapy": 200}.get(capy_type_name, 170)
+		
+		# Gentler drop for first few capys
+		if capys_stack.size() <= 2:
+			base_velocity *= 0.6
+		
+		rb.linear_velocity = Vector2(0, base_velocity)
+
+# Override spawn_capy with integrated fixes
+func spawn_capy():
+	# INTEGRATED FIX: Multiple checks to prevent spawning during game over - same as Main.gd
+	if current_capy != null or is_capy_dropping or tipping_over:
+		print("Spawn prevented - current_capy: ", current_capy, " is_dropping: ", is_capy_dropping, " tipping: ", tipping_over)
+		return
+	
+	var capy_type_name = get_capy_type_to_spawn()
+	var capy_instance = scenes[capy_type_name].instantiate()
+	add_child(capy_instance)
+	
+	if capy_type_name == "BaseCapy":
+		base_capy_count += 1
+	
+	var spawn_height = get_spawn_height()
+	capy_instance.position = Vector2(start_x_position, spawn_height)
+	moving_right = randi() % 2 == 0
+	
+	var rb = find_rigidbody(capy_instance)
+	if rb:
+		rb.gravity_scale = 0.0
+		rb.freeze_mode = RigidBody2D.FREEZE_MODE_KINEMATIC
+		rb.freeze = false
+		rb.linear_damp = 0.25
+		rb.angular_damp = 4.5
+		rb.linear_velocity = Vector2(move_speed * (1 if moving_right else -1), 0)
+	
+	current_capy = capy_instance
+	print("Spawned new capy: ", capy_type_name)
+
+# Override finalize_capy_placement with integrated fixes
+func finalize_capy_placement():
+	# INTEGRATED FIX: Check for game over before finalizing - same as Main.gd
+	if tipping_over:
+		if current_capy:
+			current_capy.queue_free()
+			current_capy = null
+		is_capy_dropping = false
+		return
+		
+	if current_capy:
+		var rb = find_rigidbody(current_capy)
+		if rb:
+			# Softer landing
+			rb.linear_velocity *= 0.3
+			rb.angular_velocity *= 0.1
+			rb.apply_impulse(Vector2.ZERO, Vector2(0, 30))
+		
+		# Add to stack
+		capys_stack.append(current_capy)
+		
+		# Enhanced base stability
+		if capys_stack.size() == 1:
+			create_ground_anchor(current_capy)
+		
+		# Progressive stickiness
+		if capys_stack.size() > 1:
+			create_sticky_connection(capys_stack[capys_stack.size() - 2], current_capy)
+		
+		# Apply progressive foundation stabilization to lower capybaras
+		apply_progressive_foundation_stability()
+		
+		current_capy = null
+		is_capy_dropping = false
+		spawn_timer = 0.0
+		
+		calculate_stack_balance()
+		
+		if scoreboard and scoreboard.has_method("_on_stack_added"):
+			scoreboard._on_stack_added()
+	
+	# HEIGHT CHALLENGE SPECIFIC: Emit stack changed signal and update stats
 	emit_signal("stack_changed")
 	
 	if scoreboard:
@@ -120,12 +356,35 @@ func finalize_capy_placement():
 			challenge_active
 		)
 
-# Override trigger_game_over for height challenge logic
+# Override trigger_game_over for height challenge logic with integrated fixes
 func trigger_game_over():
+	# INTEGRATED FIX: Same prevention logic as Main.gd
+	if tipping_over:
+		return  # Already triggered
+	
+	# HEIGHT CHALLENGE SPECIFIC: Check if challenge is still active
 	if challenge_active:
 		end_height_challenge()
 	else:
-		super.trigger_game_over()
+		# Use the integrated game over logic from Main.gd
+		tipping_over = true
+		print("Game Over! Stack collapsed!")
+		
+		# Notify scoreboard of game over
+		if scoreboard and scoreboard.has_method("game_over"):
+			scoreboard.game_over()
+		
+		# IMMEDIATELY stop spawning and remove current capy
+		if current_capy:
+			current_capy.queue_free()
+			current_capy = null
+		
+		# Reset all spawning variables
+		spawn_timer = 0.0
+		is_capy_dropping = false
+		
+		# Start restart timer
+		game_over_timer = 0.0
 
 func end_height_challenge():
 	if not challenge_active:
@@ -147,9 +406,17 @@ func end_height_challenge():
 	if scoreboard:
 		scoreboard.end_height_challenge(final_height, best_stack_height)
 	
-	# Start restart timer
+	# Start restart timer using integrated logic
 	tipping_over = true
 	game_over_timer = 0.0
+	
+	# INTEGRATED FIX: Stop spawning and clean up current capy
+	if current_capy:
+		current_capy.queue_free()
+		current_capy = null
+	
+	spawn_timer = 0.0
+	is_capy_dropping = false
 	
 	print("Height Challenge Complete! Final Height: ", final_height, " Best: ", best_stack_height)
 

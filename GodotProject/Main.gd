@@ -31,6 +31,7 @@ extends Node2D
 @onready var drop_sound_large = $DropSoundLarge
 @onready var drop_sound_sleeping = $DropSoundSleeping
 @onready var enter_drop_sound = $EnterDropSound
+@onready var game_over_sound = $GameOverSound
 
 # References
 var current_capy = null
@@ -109,6 +110,10 @@ func play_sleeping_sound():
 func play_enter_drop_sound():
 	if not mute and enter_drop_sound:
 		enter_drop_sound.play()
+
+func play_game_over_sound():
+	if not mute and game_over_sound:
+		game_over_sound.play()
 	
 func setup_scoreboard():
 	scoreboard = get_node_or_null("/root/Main/UI/Scoreboard")
@@ -405,7 +410,9 @@ func destabilize_stack():
 func trigger_game_over():
 	if tipping_over:
 		return  # Already triggered
-		
+	
+	play_game_over_sound()
+	
 	tipping_over = true
 	print("Game Over! Stack collapsed!")
 	

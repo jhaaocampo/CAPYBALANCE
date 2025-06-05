@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://buu6w8pk80q3f"]
+[gd_scene load_steps=12 format=3 uid="uid://buu6w8pk80q3f"]
 
 [ext_resource type="Script" uid="uid://ccy7cd22fhbj3" path="res://Main.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://2qv47ukpm61l" path="res://UI.tscn" id="2_trn2v"]
@@ -10,6 +10,7 @@
 [ext_resource type="AudioStream" uid="uid://cw5suq076l8qs" path="res://Audio Asset/capybara landing (baby).mp3" id="8_wkp8b"]
 [ext_resource type="AudioStream" uid="uid://bmiklqx2t4pjs" path="res://Audio Asset/capybara landing (sleepy).mp3" id="9_20pc6"]
 [ext_resource type="AudioStream" uid="uid://dllj25mpmb8rj" path="res://Audio Asset/capybara drop.mp3" id="10_wkp8b"]
+[ext_resource type="AudioStream" uid="uid://st2b0s0d1s2d" path="res://Audio Asset/game over.mp3" id="11_20pc6"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1")
@@ -39,7 +40,7 @@ position = Vector2(357, 642)
 
 [node name="EndlessPageMusic" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("6_lgr22")
-volume_db = -4.0
+volume_db = -2.667
 
 [node name="DropSoundBase" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("5_3dxm6")
@@ -59,4 +60,8 @@ volume_db = 24.0
 
 [node name="EnterDropSound" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("10_wkp8b")
+volume_db = 24.0
+
+[node name="GameOverSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("11_20pc6")
 volume_db = 24.0

@@ -8,7 +8,7 @@ extends Control
 @onready var background = $Background
 
 # Scene paths
-const GAME_SCENE = "res://Main.tscn"
+const GAME_SCENE = "res://ModeSelection.tscn"
 const SETTINGS_SCENE = "res://scenes/SettingsScene.tscn"
 
 # Design resolution (the resolution you designed your UI for)

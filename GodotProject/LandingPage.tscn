@@ -1,9 +1,10 @@
-[gd_scene load_steps=8 format=3 uid="uid://dio66r5h6282k"]
+[gd_scene load_steps=9 format=3 uid="uid://dio66r5h6282k"]
 
 [ext_resource type="Texture2D" uid="uid://bc3yiesalklmd" path="res://Background.png" id="1_fe6hs"]
 [ext_resource type="Script" uid="uid://cm74rd08yc1w2" path="res://LandingPage.gd" id="1_ur3vi"]
 [ext_resource type="Texture2D" uid="uid://k0dctlkvytgf" path="res://capybalancelogo.png" id="2_ur3vi"]
 [ext_resource type="Texture2D" uid="uid://qtpr141yk62m" path="res://start button.png" id="3_ar278"]
+[ext_resource type="AudioStream" uid="uid://dm3y7nfak0nri" path="res://Audio Asset/click button.mp3" id="3_l42u6"]
 [ext_resource type="Texture2D" uid="uid://vxtgskqapp4e" path="res://leave button.png" id="4_l42u6"]
 [ext_resource type="Texture2D" uid="uid://bohxlb1va11bs" path="res://settings button.png" id="5_flxnd"]
 [ext_resource type="AudioStream" uid="uid://cgugtxbr4521p" path="res://Audio Asset/starting menu screen.mp3" id="7_ar278"]
@@ -20,6 +21,9 @@ script = ExtResource("1_ur3vi")
 [node name="LandingPageMusic" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("7_ar278")
 volume_db = 5.333
+
+[node name="ButtonSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("3_l42u6")
 
 [node name="Background" type="TextureRect" parent="."]
 z_index = -1

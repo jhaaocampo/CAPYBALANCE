@@ -7,6 +7,7 @@ extends Control
 @onready var logo = $Logo
 @onready var background = $Background
 @onready var landing_page_music = $LandingPageMusic
+@onready var button_sound = $ButtonSound
 
 # Audio mute flag
 @onready var mute: bool = false
@@ -24,6 +25,7 @@ func _ready():
 
 	# Play background music
 	play_music()
+	
 
 	# Connect button press signals
 	start_button.pressed.connect(_on_start_button_pressed)
@@ -88,14 +90,17 @@ func _on_button_unhover():
 func _on_start_button_pressed():
 	play_button_sound()
 	start_game_transition()
+	play_button_sound()
 
 func _on_settings_button_pressed():
 	play_button_sound()
 	get_tree().change_scene_to_file(SETTINGS_SCENE)
+	play_button_sound()
 
 func _on_leave_button_pressed():
 	play_button_sound()
 	show_quit_confirmation()
+	play_button_sound()
 
 # Audio functions
 func play_music() -> void:
@@ -103,7 +108,8 @@ func play_music() -> void:
 		landing_page_music.play()
 
 func play_button_sound():
-	pass # Add button click sound here
+	if not mute and landing_page_music:
+		button_sound.play()
 
 func play_hover_sound():
 	pass # Add hover sound here

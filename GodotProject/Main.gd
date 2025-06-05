@@ -143,12 +143,6 @@ func _process(delta):
 		if spawn_timer >= spawn_delay:
 			spawn_capy()
 			spawn_timer = 0.0
-	
-	# Handle input and movement - FIXED: prevent input during game over
-	if current_capy and not is_capy_dropping and not tipping_over:
-		if Input.is_action_just_pressed("ui_accept"):
-			drop_current_capy()
-			return
 		
 		handle_horizontal_movement(delta)
 	
@@ -904,5 +898,19 @@ func get_capy_type_name(capy_instance):
 	return "BaseCapy"
 
 func _input(event):
-	if event is InputEventKey and event.pressed and event.keycode == KEY_R:
-		get_tree().reload_current_scene()
+	# Handle keyboard input (for desktop)
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_R:
+			get_tree().reload_current_scene()
+		elif event.keycode == KEY_SPACE:
+			if current_capy and not is_capy_dropping and not tipping_over:
+				drop_current_capy()
+	
+	# Handle touch input (for mobile)
+	elif event is InputEventScreenTouch and event.pressed:
+		# Single tap to drop capybara
+		if current_capy and not is_capy_dropping and not tipping_over:
+			drop_current_capy()
+		# If game is over, restart on tap
+		elif tipping_over:
+			get_tree().reload_current_scene()

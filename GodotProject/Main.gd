@@ -3,7 +3,7 @@ extends Node2D
 # Settings
 @export var capy_height := 60.0
 @export var spawn_delay := 1.0
-@export var ground_margin := 100.0
+@export var ground_margin := 130.0
 @export var move_speed := 100.0
 @export var start_height := 300.0
 @export var max_horizontal_movement := 100.0
@@ -147,10 +147,11 @@ func _process(delta):
 		
 		handle_horizontal_movement(delta)
 	
-	# Apply simplified stack effects
 	if capys_stack.size() > 1:
 		apply_stack_wobble(delta)
 		check_stack_stability(delta)
+		# Add the new global stability system
+		apply_height_based_global_stability(delta)
 
 func check_for_fallen_capys():
 	if capys_stack.size() <= 1:  # Only base capy or empty
@@ -223,42 +224,72 @@ func trigger_game_over():
 func apply_stack_wobble(delta):
 	calculate_stack_balance()
 	
-	# Apply gentle corrective forces directly to rigidbodies
+	var stack_height = capys_stack.size()
+	var foundation_size = min(ceil(stack_height * 0.5), stack_height - 1)  # Increased foundation size
+	var stack_stability_multiplier = 1.0 + min(stack_height * 0.25, 2.5)  # Increased stability bonus
+	
 	for i in range(capys_stack.size()):
 		var capy = capys_stack[i]
 		var rb = find_rigidbody(capy)
 		if rb:
-			var height_factor = float(i) / max(1, capys_stack.size() - 1)
-			var depth_factor = float(capys_stack.size() - i) / capys_stack.size()
+			var height_factor = float(i) / max(1, stack_height - 1)
+			var depth_factor = float(stack_height - i) / stack_height
+			var is_foundation = i < foundation_size
 			
-			# Gentle centering force (much weaker than before)
-			var centering_force = -stack_balance_factor * 15.0 * height_factor * (1.0 - depth_factor * 0.7)
+			# Enhanced foundation stability - much stronger for taller stacks
+			var foundation_multiplier = 1.0
+			if is_foundation:
+				foundation_multiplier = 1.0 + (foundation_size - i) * 1.0 + min(stack_height * 0.15, 1.5)
+			
+			# Progressive centering force - stronger for taller stacks
+			var base_centering = 35.0 * stack_stability_multiplier * foundation_multiplier  # Increased from 25.0
+			var centering_force = -stack_balance_factor * base_centering * height_factor * (1.0 - depth_factor * 0.3)
 			rb.apply_impulse(Vector2(centering_force * delta, 0), Vector2.ZERO)
 			
-			# Add weight-based downward force for compression
-			var compression = depth_factor * i * 8.0 * delta
+			# Enhanced compression for foundation
+			var compression_multiplier = foundation_multiplier if is_foundation else 1.0
+			var compression = depth_factor * i * 20.0 * delta * compression_multiplier  # Increased from 15.0
 			rb.apply_impulse(Vector2.ZERO, Vector2(0, compression))
+			
+			# Foundation gets continuous stability boost - much stronger
+			if is_foundation and stack_height > 3:  # Reduced threshold from 4 to 3
+				# Apply anti-wobble force - much stronger
+				var anti_wobble = -rb.linear_velocity.x * foundation_multiplier * 0.8  # Increased from 0.5
+				rb.apply_impulse(Vector2(anti_wobble * delta, 0), Vector2.ZERO)
+				
+				# Reduce angular velocity for foundation - much stronger
+				if abs(rb.angular_velocity) > 0.3:  # Reduced threshold from 0.5
+					var angular_damping = -rb.angular_velocity * foundation_multiplier * 0.6  # Increased from 0.3
+					rb.apply_torque_impulse(angular_damping * delta)
 
 func check_stack_stability(delta):
 	if capys_stack.size() <= 1 or tipping_over:
 		return
 	
 	var imbalance = abs(stack_balance_factor)
-	var stability_threshold = 0.6  # Reduced from 0.75 for earlier detection
+	# Much more forgiving threshold that scales significantly with stack height
+	var base_threshold = 0.6  # Increased from 0.45
+	var height_bonus = min(capys_stack.size() * 0.08, 0.4)  # Increased bonus
+	var stability_threshold = base_threshold + height_bonus
 	
-	# Also check for rapid movement indicating instability
+	# Also check for rapid movement indicating instability - more lenient
 	var top_capy = capys_stack.back()
 	var rb = find_rigidbody(top_capy)
 	var rapid_movement = false
 	if rb:
-		rapid_movement = rb.linear_velocity.length() > 200 or abs(rb.angular_velocity) > 5.0
+		# Much more lenient movement thresholds for taller stacks
+		var velocity_threshold = 400 + min(capys_stack.size() * 30, 200)  # Scales with height
+		var angular_threshold = 10.0 + min(capys_stack.size() * 0.5, 5.0)  # Scales with height
+		rapid_movement = rb.linear_velocity.length() > velocity_threshold or abs(rb.angular_velocity) > angular_threshold
 	
 	if imbalance > stability_threshold or rapid_movement:
 		imbalance_duration += delta
-		if imbalance_duration > 2.0:  # Reduced from 3.0 seconds
+		# Much longer grace period for taller stacks
+		var grace_period = 3.0 + min(capys_stack.size() * 0.5, 4.0)  # 3.0-7.0 seconds
+		if imbalance_duration > grace_period:
 			destabilize_stack()
 	else:
-		imbalance_duration = max(0, imbalance_duration - delta)
+		imbalance_duration = max(0, imbalance_duration - delta * 2.0)  # Faster recovery
 
 func check_if_stack_settled(capy_index):
 	if capys_stack.size() <= 1:
@@ -269,21 +300,24 @@ func check_if_stack_settled(capy_index):
 	if not rb:
 		return true
 	
-	# More lenient velocity thresholds
-	var velocity_threshold = 25.0  # Increased from 15.0
-	var angular_velocity_threshold = 0.5  # Increased from 0.3
+	# Height-based velocity thresholds - more lenient for taller stacks
+	var base_threshold = 35.0  # Increased from 25.0
+	var height_bonus = min(capys_stack.size() * 5.0, 25.0)
+	var velocity_threshold = base_threshold + height_bonus
+	var angular_velocity_threshold = 0.8 + min(capys_stack.size() * 0.1, 0.5)
 	
 	var is_velocity_low = rb.linear_velocity.length() < velocity_threshold
 	var is_angular_velocity_low = abs(rb.angular_velocity) < angular_velocity_threshold
 	
-	# Check if the stack has been in a tilted state for a reasonable time
+	# More forgiving tilt tolerance
 	var imbalance = abs(stack_balance_factor)
-	var has_some_tilt = imbalance > 0.1  # Reduced from 0.15
+	var tilt_tolerance = 0.05 + min(capys_stack.size() * 0.02, 0.15)
+	var has_acceptable_tilt = imbalance > tilt_tolerance
 	
-	# Also consider it settled if velocities are very low, even without tilt
-	var is_very_still = rb.linear_velocity.length() < 10.0 and abs(rb.angular_velocity) < 0.2
+	# Very still detection
+	var is_very_still = rb.linear_velocity.length() < 15.0 and abs(rb.angular_velocity) < 0.3
 	
-	return (has_some_tilt and is_velocity_low and is_angular_velocity_low) or is_very_still
+	return (has_acceptable_tilt and is_velocity_low and is_angular_velocity_low) or is_very_still
 
 func calculate_stack_balance():
 	if capys_stack.size() <= 1:
@@ -293,9 +327,11 @@ func calculate_stack_balance():
 	var stack_center_x = 0.0
 	var total_weight = 0.0
 	
+	# More forgiving weight distribution calculation
 	for i in range(capys_stack.size()):
 		var capy = capys_stack[i]
-		var weight = pow(2.5, i)
+		# Reduced exponential weight growth for more forgiveness
+		var weight = pow(2.0, i * 0.8)  # Reduced from 2.5
 		stack_center_x += capy.position.x * weight
 		total_weight += weight
 	
@@ -304,9 +340,18 @@ func calculate_stack_balance():
 	
 	var base_x = capys_stack[0].position.x
 	var screen_width = get_viewport_rect().size.x
-	var raw_balance = (stack_center_x - base_x) / (screen_width * 0.15)
 	
-	stack_balance_factor = clamp(raw_balance, -1, 1)
+	# More forgiving balance calculation with height-based tolerance
+	var tolerance_factor = 0.2 + min(capys_stack.size() * 0.02, 0.1)  # Increased tolerance
+	var raw_balance = (stack_center_x - base_x) / (screen_width * tolerance_factor)
+	
+	# Apply smoothing to reduce sudden balance changes
+	var target_balance = clamp(raw_balance, -1, 1)
+	if abs(target_balance - stack_balance_factor) > 0.1:
+		stack_balance_factor = lerp(stack_balance_factor, target_balance, 0.7)
+	else:
+		stack_balance_factor = target_balance
+	
 	stack_height = capys_stack.size()
 
 func drop_current_capy():
@@ -467,6 +512,59 @@ func _physics_process(delta):
 		
 		if landed:
 			finalize_capy_placement()
+			
+	if capys_stack.size() > 5:
+		reinforce_foundation_continuously(delta)
+		
+func reinforce_foundation_continuously(delta):
+	var stack_height = capys_stack.size()
+	var foundation_size = min(ceil(stack_height * 0.5), stack_height - 2)  # Increased from 0.35
+	
+	for i in range(foundation_size):
+		var capy = capys_stack[i]
+		var rb = find_rigidbody(capy)
+		if rb:
+			var foundation_strength = float(foundation_size - i) / foundation_size
+			var height_factor = min(stack_height / 6.0, 3.0)  # Increased scaling
+			
+			# Continuous downward compression - stronger
+			var compression_force = foundation_strength * height_factor * 30.0 * delta  # Increased from 20.0
+			rb.apply_impulse(Vector2.ZERO, Vector2(0, compression_force))
+			
+			# Horizontal stabilization - much stronger
+			var horizontal_damping = -rb.linear_velocity.x * foundation_strength * height_factor * 1.2  # Increased from 0.8
+			rb.apply_impulse(Vector2(horizontal_damping * delta, 0), Vector2.ZERO)
+			
+			# Prevent excessive rotation - much more aggressive
+			if abs(rb.angular_velocity) > 0.5:  # Reduced threshold from 1.0
+				var rotation_damping = -rb.angular_velocity * foundation_strength * height_factor * 0.8  # Increased from 0.5
+				rb.apply_torque_impulse(rotation_damping * delta)
+			
+			# Gradually increase mass for very tall stacks - more aggressive
+			if stack_height > 6 and i < 4:  # Reduced threshold from 8 to 6
+				var mass_bonus = foundation_strength * 0.15 * delta  # Increased from 0.1
+				rb.mass = min(rb.mass + mass_bonus, rb.mass * 4.0)  # Increased cap from 3.0 to 4.0
+
+# Add this new function for additional stability at higher stacks
+func apply_height_based_global_stability(delta):
+	var stack_height = capys_stack.size()
+	if stack_height < 5:
+		return
+	
+	# Global stability bonus that affects the entire stack
+	var global_stability = min((stack_height - 4) * 0.1, 0.5)
+	
+	for i in range(capys_stack.size()):
+		var capy = capys_stack[i]
+		var rb = find_rigidbody(capy)
+		if rb:
+			# Apply global anti-wobble
+			var anti_wobble = -rb.linear_velocity * global_stability * 0.3
+			rb.apply_impulse(anti_wobble * delta, Vector2.ZERO)
+			
+			# Reduce angular momentum globally
+			var angular_damping = -rb.angular_velocity * global_stability * 0.4
+			rb.apply_torque_impulse(angular_damping * delta)
 
 func check_stack_collision(rb):
 	for contact_body in rb.get_colliding_bodies():
@@ -484,27 +582,24 @@ func finalize_capy_placement():
 	if current_capy:
 		var rb = find_rigidbody(current_capy)
 		if rb:
-			# Reduce velocity for softer landing
-			rb.linear_velocity *= 0.4
-			rb.angular_velocity *= 0.2
-			
-			# Apply settling force
-			rb.apply_impulse(Vector2.ZERO, Vector2(0, 50))
+			# Softer landing
+			rb.linear_velocity *= 0.3
+			rb.angular_velocity *= 0.1
+			rb.apply_impulse(Vector2.ZERO, Vector2(0, 30))
 		
-		# Add to stack without creating joints
+		# Add to stack
 		capys_stack.append(current_capy)
 		
-		# Make base capy extra stable
+		# Enhanced base stability
 		if capys_stack.size() == 1:
-			create_ground_anchor(current_capy)  # This now just increases mass/friction
+			create_ground_anchor(current_capy)
 		
-		var scoreboard = get_node("/root/Main/UI/Scoreboard")
-		if scoreboard:
-			scoreboard.add_score(1)
-			
-		# Apply sticky physics instead of joints
+		# Progressive stickiness
 		if capys_stack.size() > 1:
 			create_sticky_connection(capys_stack[capys_stack.size() - 2], current_capy)
+		
+		# Apply progressive foundation stabilization to lower capybaras
+		apply_progressive_foundation_stability()
 		
 		current_capy = null
 		is_capy_dropping = false
@@ -512,14 +607,63 @@ func finalize_capy_placement():
 		
 		calculate_stack_balance()
 		
+func apply_progressive_foundation_stability():
+	var stack_height = capys_stack.size()
+	if stack_height <= 2:
+		return
+	
+	# Larger foundation for taller stacks
+	var foundation_size = min(ceil(stack_height * 0.6), stack_height - 1)  # Increased from 0.4
+	
+	# Apply stability to foundation capybaras
+	for i in range(foundation_size):
+		var capy = capys_stack[i]
+		var rb = find_rigidbody(capy)
+		if rb:
+			# Calculate stability multipliers - much stronger scaling
+			var height_multiplier = pow(stack_height / 3.0, 0.8)  # Increased from 0.6
+			var foundation_depth = float(foundation_size - i) / foundation_size
+			var total_weight_above = calculate_stack_weight_above(i)
+			
+			# Progressive mass increase for foundation - much stronger
+			var base_mass = capy_types[get_capy_type_name(capy)]["mass"]
+			var mass_bonus = foundation_depth * height_multiplier * 1.2  # Increased from 0.8
+			var weight_bonus = min(total_weight_above * 0.4, 1.5)  # Increased
+			rb.mass = base_mass + mass_bonus + weight_bonus
+			
+			# Enhanced damping for foundation stability - much stronger
+			var base_linear_damp = 4.0  # Increased from 3.0
+			var base_angular_damp = 6.0  # Increased from 5.0
+			var damp_bonus = foundation_depth * height_multiplier * 3.0  # Increased from 2.0
+			rb.linear_damp = base_linear_damp + damp_bonus
+			rb.angular_damp = base_angular_damp + damp_bonus * 1.5
+			
+			# Reduce gravity for foundation capybaras - more aggressive
+			var gravity_reduction = foundation_depth * height_multiplier * 0.4  # Increased from 0.3
+			rb.gravity_scale = max(0.05, rb.gravity_scale - gravity_reduction)  # Lower minimum
+			
+			# Increase friction for foundation - much higher
+			if rb.physics_material_override:
+				var friction_bonus = foundation_depth * height_multiplier * 4.0  # Increased from 3.0
+				rb.physics_material_override.friction = min(18.0, rb.physics_material_override.friction + friction_bonus)  # Increased max
+		
 func create_ground_anchor(capy):
-	# Don't create any anchor joint - just make base capy heavier and stickier
 	var rb = find_rigidbody(capy)
 	if rb:
-		rb.mass = 3.0  # Make base capy much heavier
+		# Base capybara gets progressively more stable as stack grows
+		var initial_mass = 4.0  # Increased from 3.0
+		rb.mass = initial_mass
+		
 		if rb.physics_material_override:
-			rb.physics_material_override.friction = 12.0
-			rb.physics_material_override.bounce = 0.01
+			rb.physics_material_override.friction = 15.0  # Increased from 12.0
+			rb.physics_material_override.bounce = 0.005  # Reduced from 0.01
+		
+		# Reduce gravity significantly for base
+		rb.gravity_scale = 0.3
+		
+		# High damping for base stability
+		rb.linear_damp = 4.0
+		rb.angular_damp = 6.0
 
 func apply_gentle_early_physics(rb, stack_position):
 	# Make early capys less bouncy and more stable
@@ -703,9 +847,6 @@ func get_capy_type_name(capy_instance):
 		if scene_path.ends_with(type_name + ".tscn"):
 			return type_name
 	return "BaseCapy"
-
-func _draw():
-	draw_line(Vector2(0, ground_level), Vector2(get_viewport_rect().size.x, ground_level), Color.WHITE, 2.0)
 
 func _input(event):
 	if event is InputEventKey and event.pressed and event.keycode == KEY_R:

@@ -62,6 +62,9 @@ var capy_types := {
 	"SleepingCapy": {"height": 65.0, "mass": 1.2, "gravity_scale": 2.0}
 }
 
+const GAME_OVER_SCENE = "res://GameOver.tscn"  # Path to your game over scene
+var game_over_scene_instance = null
+
 func _ready():
 	randomize()
 	ground_level = get_viewport_rect().size.y - ground_margin
@@ -74,20 +77,6 @@ func _ready():
 	place_base_capy()
 	setup_initial_camera()
 	setup_scoreboard()
-	
-func setup_touch_input():
-	# Create touch input action if it doesn't exist
-	if not InputMap.has_action("touch_drop"):
-		InputMap.add_action("touch_drop")
-		
-		# Add screen touch event
-		var touch_event = InputEventScreenTouch.new()
-		InputMap.action_add_event("touch_drop", touch_event)
-		
-		# Also add mouse click for desktop testing
-		var mouse_event = InputEventMouseButton.new()
-		mouse_event.button_index = MOUSE_BUTTON_LEFT
-		InputMap.action_add_event("touch_drop", mouse_event)
 	
 func setup_scoreboard():
 	scoreboard = get_node_or_null("/root/Main/UI/Scoreboard")
@@ -156,11 +145,9 @@ func _process(delta):
 	update_camera(delta)
 	wobble_time += delta
 	
-	# Handle game over timer and restart
+	# Handle game over - but don't reload scene automatically
 	if tipping_over:
-		game_over_timer += delta
-		if game_over_timer >= game_over_delay:
-			get_tree().reload_current_scene()
+		# Remove the automatic scene reload logic
 		return  # Don't process anything else during game over
 	
 	# Check for fallen capybaras FIRST - before any other logic
@@ -177,7 +164,7 @@ func _process(delta):
 			spawn_capy()
 			spawn_timer = 0.0
 	
-	# Handle input and movement - prevent input during game over
+# Handle input and movement - prevent input during game over
 	if current_capy and not is_capy_dropping:
 		# Check for touch input (mobile) or keyboard input (desktop)
 		if Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("touch_drop"):
@@ -190,8 +177,31 @@ func _process(delta):
 		apply_stack_wobble(delta)
 		check_stack_stability(delta)
 		apply_height_based_global_stability(delta)
-
-
+		
+func setup_touch_input():
+	# Create touch input action if it doesn't exist
+	if not InputMap.has_action("touch_drop"):
+		InputMap.add_action("touch_drop")
+		
+		# Add screen touch event
+		var touch_event = InputEventScreenTouch.new()
+		InputMap.action_add_event("touch_drop", touch_event)
+		
+		# Also add mouse click for desktop testing
+		var mouse_event = InputEventMouseButton.new()
+		mouse_event.button_index = MOUSE_BUTTON_LEFT
+		InputMap.action_add_event("touch_drop", mouse_event)
+		
+func cleanup_game_over():
+	if game_over_scene_instance:
+		# Get the UI canvas reference and remove it
+		var ui_canvas = game_over_scene_instance.get_meta("ui_canvas", null)
+		if ui_canvas:
+			ui_canvas.queue_free()
+		else:
+			game_over_scene_instance.queue_free()
+		game_over_scene_instance = null
+	get_tree().paused = false
 
 func check_for_fallen_capys():
 	if tipping_over:  # Already triggered, don't check again
@@ -380,8 +390,62 @@ func trigger_game_over():
 	spawn_timer = 0.0
 	is_capy_dropping = false
 	
-	# Start restart timer
-	game_over_timer = 0.0
+	# Instead of reloading scene, show game over screen after a short delay
+	await get_tree().create_timer(2.0).timeout  # Give time to see the collapse
+	show_game_over_screen()
+
+func show_game_over_screen():
+	# Load and instantiate the game over scene
+	var game_over_scene = load(GAME_OVER_SCENE)
+	if not game_over_scene:
+		push_error("Could not load game over scene!")
+		return
+	
+	game_over_scene_instance = game_over_scene.instantiate()
+	
+	# Get the current score from scoreboard
+	var current_score = 0
+	var high_score = 0
+	
+	if scoreboard:
+		if scoreboard.has_method("get_current_score"):
+			current_score = scoreboard.get_current_score()
+		elif scoreboard.has_method("get_score"):
+			current_score = scoreboard.get_score()
+		else:
+			current_score = capys_stack.size()  # Fallback to stack size
+		
+		if scoreboard.has_method("get_stacking_high_score"):
+			high_score = scoreboard.get_stacking_high_score()
+		elif "stacking_high_score" in scoreboard:
+			high_score = scoreboard.stacking_high_score
+	
+	# Setup the game over screen with data
+	if game_over_scene_instance.has_method("setup_game_over_data"):
+		var is_new_record = (current_score == high_score and current_score > 0)
+		game_over_scene_instance.setup_game_over_data(current_score, high_score, false, is_new_record)
+	
+	# Create a dedicated CanvasLayer for UI that won't move with camera
+	var ui_canvas = CanvasLayer.new()
+	ui_canvas.name = "GameOverUI"
+	ui_canvas.layer = 1000  # Very high layer to ensure it's always on top
+	
+	# Add the CanvasLayer to the scene tree root (not current scene)
+	get_tree().root.add_child(ui_canvas)
+	
+	# Add the game over screen to the CanvasLayer
+	ui_canvas.add_child(game_over_scene_instance)
+	
+	# Ensure it fills the screen
+	game_over_scene_instance.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	
+	# Store reference to the UI canvas for cleanup
+	game_over_scene_instance.set_meta("ui_canvas", ui_canvas)
+	
+	# Optional: Pause the game
+	get_tree().paused = true
+	game_over_scene_instance.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
+
 
 func apply_stack_wobble(delta):
 	calculate_stack_balance()
@@ -1080,6 +1144,7 @@ func get_capy_type_name(capy_instance):
 		if scene_path.ends_with(type_name + ".tscn"):
 			return type_name
 	return "BaseCapy"
+
 
 func _input(event):
 	# Handle restart key

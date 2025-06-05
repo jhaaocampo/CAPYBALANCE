@@ -1,0 +1,144 @@
+[gd_scene load_steps=8 format=3 uid="uid://vemh6wr0oru1"]
+
+[ext_resource type="FontFile" uid="uid://dv6rxjsqf5lyn" path="res://PressStart2P.ttf" id="1_3y56u"]
+[ext_resource type="Script" uid="uid://byf2mmmx6gj02" path="res://GameOver.gd" id="1_ua7od"]
+[ext_resource type="Texture2D" uid="uid://bc3yiesalklmd" path="res://Background.png" id="2_ua7od"]
+[ext_resource type="Texture2D" uid="uid://k0dctlkvytgf" path="res://capybalancelogo.png" id="3_3fonj"]
+[ext_resource type="Texture2D" uid="uid://d3wot3t2r31c7" path="res://Gameover box.png" id="4_758bs"]
+[ext_resource type="Texture2D" uid="uid://dk5ssdj0jlq7m" path="res://Replay button.png" id="5_rr04i"]
+[ext_resource type="Texture2D" uid="uid://vxtgskqapp4e" path="res://leave button.png" id="6_067b4"]
+
+[node name="GameOver" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ua7od")
+
+[node name="GameModeText" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Label" type="Label" parent="GameModeText"]
+layout_mode = 0
+offset_left = 82.0
+offset_top = 464.0
+offset_right = 1072.0
+offset_bottom = 613.0
+scale = Vector2(0.651614, 0.651361)
+theme_override_colors/font_color = Color(1, 0.788235, 0.0823529, 1)
+theme_override_colors/font_shadow_color = Color(0.568973, 0.568973, 0.568973, 1)
+theme_override_fonts/font = ExtResource("1_3y56u")
+theme_override_font_sizes/font_size = 90
+text = "GAME OVER!"
+
+[node name="Background" type="TextureRect" parent="."]
+visible = false
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -6.0
+offset_right = 251.0
+offset_bottom = 420.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.739095, 0.751704)
+texture = ExtResource("2_ua7od")
+expand_mode = 3
+
+[node name="Logo" type="TextureRect" parent="."]
+offset_left = -7.0
+offset_top = -105.0
+offset_right = 2018.0
+offset_bottom = 1920.0
+scale = Vector2(0.355578, 0.334725)
+texture = ExtResource("3_3fonj")
+
+[node name="GameoverBox" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = -307.0
+offset_top = 552.0
+offset_right = 1448.0
+offset_bottom = 1365.0
+scale = Vector2(0.754051, 0.513953)
+texture = ExtResource("4_758bs")
+
+[node name="ReplayButtonContainer" type="VBoxContainer" parent="."]
+offset_left = 230.0
+offset_top = 975.0
+offset_right = 1985.0
+offset_bottom = 2595.0
+scale = Vector2(0.139891, 0.11173)
+theme_override_constants/separation = 30
+
+[node name="ReplayButton" type="TextureButton" parent="ReplayButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+texture_normal = ExtResource("5_rr04i")
+
+[node name="LeaveButtonContainer" type="VBoxContainer" parent="."]
+offset_left = 285.0
+offset_top = 1069.0
+offset_right = 1905.0
+offset_bottom = 1819.0
+scale = Vector2(0.0836657, 0.0803381)
+
+[node name="LeaveButton" type="TextureButton" parent="LeaveButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+texture_normal = ExtResource("6_067b4")
+
+[node name="ScoreSummary" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="StacksGained" type="Label" parent="ScoreSummary"]
+layout_mode = 0
+offset_left = 131.0
+offset_top = 605.0
+offset_right = 586.0
+offset_bottom = 640.0
+theme_override_colors/font_color = Color(0.403922, 0.231373, 0.027451, 1)
+theme_override_fonts/font = ExtResource("1_3y56u")
+theme_override_font_sizes/font_size = 35
+text = "STACKS GAINED"
+
+[node name="StacksGainedScore" type="Label" parent="ScoreSummary"]
+layout_mode = 0
+offset_left = 334.0
+offset_top = 675.0
+offset_right = 394.0
+offset_bottom = 735.0
+theme_override_colors/font_color = Color(0.403922, 0.231373, 0.027451, 1)
+theme_override_fonts/font = ExtResource("1_3y56u")
+theme_override_font_sizes/font_size = 60
+text = "0"
+
+[node name="HighestStack" type="Label" parent="ScoreSummary"]
+layout_mode = 0
+offset_left = 121.0
+offset_top = 790.0
+offset_right = 576.0
+offset_bottom = 825.0
+theme_override_colors/font_color = Color(0.403922, 0.231373, 0.027451, 1)
+theme_override_fonts/font = ExtResource("1_3y56u")
+theme_override_font_sizes/font_size = 35
+text = "HIGHEST STACK"
+
+[node name="HighestStackScore" type="Label" parent="ScoreSummary"]
+layout_mode = 0
+offset_left = 334.0
+offset_top = 865.0
+offset_right = 394.0
+offset_bottom = 925.0
+theme_override_colors/font_color = Color(0.403922, 0.231373, 0.027451, 1)
+theme_override_fonts/font = ExtResource("1_3y56u")
+theme_override_font_sizes/font_size = 60
+text = "0"

@@ -4,33 +4,34 @@ extends Control
 @onready var height_challenge_button = $HeightChallengeButtonContainer/HeightChallengeButton
 @onready var endless_stack_button = $EndlessStackButtonContainer/EndlessStackButton
 @onready var back_button = $BackButtonContainer/BackButton
-@onready var settings_button = $SettingsButtonContainer/SettingsButton
+@onready var volume_button = $VolumeButtonContainer/VolumeButton
 @onready var title_label = $TitleLabel
 @onready var background = $Background
-@onready var landing_page_music = $LandingPageMusic
-@onready var button_sound = $ButtonSound
-@onready var mute: bool = false
 
 # Animation variables
 var height_pulse_tween: Tween
 var endless_pulse_tween: Tween
 
+# Volume state
+var volume_enabled: bool = true
+
 # Scene paths
 const HEIGHT_CHALLENGE_SCENE = "res://HeightChallenge.tscn"
 const ENDLESS_STACK_SCENE = "res://Main.tscn"
 const LANDING_PAGE_SCENE = "res://LandingPage.tscn"
-const SETTINGS_SCENE = "res://SettingsScene.tscn"
 
 func _ready():
-	landing_page_music.play()
 	# Set this Control to fill the entire screen
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	
+	# Load volume setting
+	load_volume_setting()
 	
 	# Connect button press signals
 	height_challenge_button.pressed.connect(_on_height_challenge_button_pressed)
 	endless_stack_button.pressed.connect(_on_endless_stack_button_pressed)
 	back_button.pressed.connect(_on_back_button_pressed)
-	settings_button.pressed.connect(_on_settings_button_pressed)
+	volume_button.pressed.connect(_on_volume_button_pressed)
 	
 	# Connect button visual state signals for Height Challenge button
 	height_challenge_button.button_down.connect(func(): _on_button_pressed(height_challenge_button))
@@ -50,15 +51,59 @@ func _ready():
 	back_button.mouse_entered.connect(_on_button_hover)
 	back_button.mouse_exited.connect(_on_button_unhover)
 	
-	# Connect button visual state signals for Settings button
-	settings_button.button_down.connect(func(): _on_button_pressed(settings_button))
-	settings_button.button_up.connect(func(): _on_button_released(settings_button))
-	settings_button.mouse_entered.connect(_on_button_hover)
-	settings_button.mouse_exited.connect(_on_button_unhover)
+	# Connect button visual state signals for Volume button
+	volume_button.button_down.connect(func(): _on_button_pressed(volume_button))
+	volume_button.button_up.connect(func(): _on_button_released(volume_button))
+	volume_button.mouse_entered.connect(_on_button_hover)
+	volume_button.mouse_exited.connect(_on_button_unhover)
+	
+
 	
 	# Start the pulsing animations for both mode buttons
 	start_height_pulse_animation()
 	start_endless_pulse_animation()
+
+# Volume functions
+func _on_volume_button_pressed():
+	# The button's pressed state is now handled automatically by toggle mode
+	volume_enabled = volume_button.button_pressed
+	save_volume_setting()
+	apply_volume_setting()
+	
+	if volume_enabled:
+		play_button_sound()
+
+func toggle_volume():
+	volume_enabled = !volume_enabled
+	save_volume_setting()
+	apply_volume_setting()
+
+
+func apply_volume_setting():
+	# Set the master audio bus volume
+	var master_bus_index = AudioServer.get_bus_index("Master")
+	if volume_enabled:
+		AudioServer.set_bus_volume_db(master_bus_index, 0.0)  # Normal volume
+	else:
+		AudioServer.set_bus_volume_db(master_bus_index, -80.0)  # Effectively muted
+
+func save_volume_setting():
+	# Save volume setting to a simple config file
+	var config = ConfigFile.new()
+	config.set_value("audio", "volume_enabled", volume_enabled)
+	config.save("user://volume_settings.cfg")
+
+func load_volume_setting():
+	# Load volume setting from config file
+	var config = ConfigFile.new()
+	var err = config.load("user://volume_settings.cfg")
+	if err == OK:
+		volume_enabled = config.get_value("audio", "volume_enabled", true)
+	else:
+		volume_enabled = true  # Default to volume on
+	
+	# Apply the loaded setting
+	apply_volume_setting()
 
 # Pulsing animation functions
 func start_height_pulse_animation():
@@ -108,36 +153,32 @@ func _on_button_released(button: TextureButton):
 
 # Hover functions
 func _on_button_hover():
-	play_hover_sound()
+	if volume_enabled:
+		play_hover_sound()
 
 func _on_button_unhover():
 	pass
 
 # Button action functions
 func _on_height_challenge_button_pressed():
-	button_sound.play()
+	if volume_enabled:
+		play_button_sound()
 	start_game_transition(HEIGHT_CHALLENGE_SCENE)
 
 func _on_endless_stack_button_pressed():
-	button_sound.play()
+	if volume_enabled:
+		play_button_sound()
 	start_game_transition(ENDLESS_STACK_SCENE)
 
 func _on_back_button_pressed():
-	button_sound.play()
+	if volume_enabled:
+		play_button_sound()
 	go_back_to_landing()
 
-func _on_settings_button_pressed():
-	button_sound.play()
-	get_tree().change_scene_to_file(SETTINGS_SCENE)
-
 # Audio functions
-func play_music() -> void:
-	if not mute and landing_page_music:
-		landing_page_music.play()
-
 func play_button_sound():
-	if not mute and landing_page_music:
-		button_sound.play()
+	# Add your audio logic here
+	pass
 
 func play_hover_sound():
 	# Add your audio logic here
@@ -149,7 +190,7 @@ func start_game_transition(scene_path: String):
 	height_challenge_button.disabled = true
 	endless_stack_button.disabled = true
 	back_button.disabled = true
-	settings_button.disabled = true
+	volume_button.disabled = true
 	
 	var tween = create_tween()
 	tween.tween_property(self, "modulate:a", 0.0, 0.5)
@@ -160,7 +201,7 @@ func go_back_to_landing():
 	height_challenge_button.disabled = true
 	endless_stack_button.disabled = true
 	back_button.disabled = true
-	settings_button.disabled = true
+	volume_button.disabled = true
 	
 	var tween = create_tween()
 	tween.tween_property(self, "modulate:a", 0.0, 0.3)

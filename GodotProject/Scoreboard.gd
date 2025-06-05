@@ -4,6 +4,10 @@ extends Control
 @onready var score_label: Label = $Stacks
 @onready var high_score_label: Label = $HighScore
 @onready var timer_label: Label = $Timer
+@onready var volume_button: TextureButton = $VolumeButton  # Add this line
+
+# Volume state
+var volume_enabled: bool = true
 
 # Game mode detection
 enum GameMode { STACKING, HEIGHT_CHALLENGE }
@@ -24,9 +28,61 @@ var best_height: int = 0
 func _ready():
 	detect_game_mode()
 	load_high_scores()
+	load_volume_setting()  # Load volume setting
+	setup_volume_button()  # Setup volume button
 	update_display()
 	connect_to_game_signals()
 
+# Volume functions
+func setup_volume_button():
+	if volume_button:
+		volume_button.toggle_mode = true
+		volume_button.button_pressed = !volume_enabled  # Inverted because pressed = muted
+		volume_button.pressed.connect(_on_volume_button_pressed)
+
+func _on_volume_button_pressed():
+	toggle_volume()
+
+func toggle_volume():
+	volume_enabled = !volume_button.button_pressed  # Inverted because pressed = muted
+	save_volume_setting()
+	apply_volume_setting()
+	
+	if volume_enabled:
+		play_ui_sound()
+
+func apply_volume_setting():
+	# Set the master audio bus volume
+	var master_bus_index = AudioServer.get_bus_index("Master")
+	if volume_enabled:
+		AudioServer.set_bus_volume_db(master_bus_index, 0.0)  # Normal volume
+	else:
+		AudioServer.set_bus_volume_db(master_bus_index, -80.0)  # Effectively muted
+
+func save_volume_setting():
+	# Save volume setting to a simple config file
+	var config = ConfigFile.new()
+	config.set_value("audio", "volume_enabled", volume_enabled)
+	config.save("user://volume_settings.cfg")
+
+func load_volume_setting():
+	# Load volume setting from config file
+	var config = ConfigFile.new()
+	var err = config.load("user://volume_settings.cfg")
+	if err == OK:
+		volume_enabled = config.get_value("audio", "volume_enabled", true)
+	else:
+		volume_enabled = true  # Default to volume on
+	
+	# Apply the loaded setting
+	apply_volume_setting()
+
+# Audio function for UI sounds (you can expand this)
+func play_ui_sound():
+	# Add your UI sound logic here
+	pass
+
+# Rest of your existing code remains the same...
 func detect_game_mode():
 	var current_scene = get_tree().current_scene
 	if current_scene:
@@ -213,6 +269,10 @@ func animate_score_increase():
 	var original_color = score_label.modulate
 	score_label.modulate = flash_color
 	tween.tween_property(score_label, "modulate", original_color, 0.3)
+	
+	# Play sound effect if volume is enabled
+	if volume_enabled:
+		play_score_sound()
 
 func animate_challenge_complete():
 	var tween = create_tween()
@@ -228,6 +288,19 @@ func animate_challenge_complete():
 		var original_color = high_score_label.modulate
 		high_score_label.modulate = flash_color
 		tween.tween_property(high_score_label, "modulate", original_color, 0.8)
+		
+		# Play achievement sound if volume is enabled
+		if volume_enabled:
+			play_achievement_sound()
+
+# Audio functions (you can implement these with actual AudioStreamPlayer nodes)
+func play_score_sound():
+	# Add your score sound logic here
+	pass
+
+func play_achievement_sound():
+	# Add your achievement sound logic here
+	pass
 
 func load_high_scores():
 	# Load stacking mode scores
@@ -282,3 +355,7 @@ func _on_capy_added():
 		update_current_height()
 	else:
 		_on_stack_added()
+
+# Public method to get volume state (useful for other scripts)
+func is_volume_enabled() -> bool:
+	return volume_enabled

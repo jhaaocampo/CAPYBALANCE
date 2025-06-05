@@ -105,12 +105,16 @@ func create_ground():
 	ground_shape.shape = shape
 	ground_body.add_child(ground_shape)
 
-# Combined contact checking function
 func is_contacting_something(rb):
 	for contact_body in rb.get_colliding_bodies():
-		if contact_body == ground_body or find_capy_owner(contact_body) in capys_stack:
+		if contact_body == ground_body:
 			return true
-	return abs(rb.global_position.y - ground_level) < capy_height * 0.35
+		if find_capy_owner(contact_body) in capys_stack:
+			return true
+	
+	# More precise ground proximity check
+	var capy_bottom = rb.global_position.y + (capy_height * 0.4)
+	return capy_bottom >= ground_level - 5.0  # Small tolerance for ground contact
 
 func find_capy_owner(body):
 	var node = body
@@ -168,11 +172,12 @@ func _process(delta):
 		check_stack_stability(delta)
 		apply_height_based_global_stability(delta)
 
+
 func check_for_fallen_capys():
 	if tipping_over:  # Already triggered, don't check again
 		return
 		
-	if capys_stack.size() <= 1:  # Only base capy or empty
+	if capys_stack.size() == 0:  # No capybaras in stack
 		return
 		
 	# Check all capybaras for various failure conditions
@@ -184,13 +189,38 @@ func check_for_fallen_capys():
 		var rb = find_rigidbody(capy)
 		if not rb:
 			continue
+		
+		# FIXED: Check if any non-base capy has touched the ground
+		if i > 0:  # Not the base capy (index 0)
+			# More precise ground collision detection
+			var capy_bottom = capy.position.y + (capy_height * 0.4)  # Bottom edge of capy
+			if capy_bottom >= ground_level:
+				print("Game Over: Non-base capybara touched ground at position ", capy.position.y, " (ground: ", ground_level, ")")
+				trigger_game_over()
+				return
 			
-		# Check if any capy (including base) has fallen to ground level
-		if capy.position.y >= ground_level - capy_height * 0.2:
-			print("Game Over: Capybara hit ground at position ", capy.position.y, " (ground: ", ground_level, ")")
-			trigger_game_over()
-			return
-			
+			# Also check if touching ground body directly
+			if rb.get_colliding_bodies().has(ground_body):
+				print("Game Over: Non-base capybara collided with ground body")
+				trigger_game_over()
+				return
+		
+		# NEW: Check if any capy is touching capys it shouldn't be touching
+		# Each capy should only touch the one directly below it (and above it if it exists)
+		var colliding_bodies = rb.get_colliding_bodies()
+		for body in colliding_bodies:
+			var capy_owner = find_capy_owner(body)
+			if capy_owner and capy_owner in capys_stack:
+				var owner_index = capys_stack.find(capy_owner)
+				var current_index = i
+				
+				# A capy should only touch adjacent capys (one above, one below)
+				var index_difference = abs(owner_index - current_index)
+				if index_difference > 1:
+					print("Game Over: Capy at index ", current_index, " is touching non-adjacent capy at index ", owner_index)
+					trigger_game_over()
+					return
+		
 		# Check for extreme horizontal displacement from stack center
 		var base_x = capys_stack[0].position.x if capys_stack.size() > 0 else start_x_position
 		var horizontal_distance = abs(capy.position.x - base_x)
@@ -206,6 +236,76 @@ func check_for_fallen_capys():
 			print("Game Over: Capybara moving too fast: ", rb.linear_velocity.length())
 			trigger_game_over()
 			return
+
+func check_dropping_capy_collision():
+	if not current_capy or not is_capy_dropping or tipping_over:
+		return
+		
+	var rb = find_rigidbody(current_capy)
+	if not rb:
+		return
+		
+	# Check what the dropping capy is colliding with
+	var colliding_bodies = rb.get_colliding_bodies()
+	var valid_collision = false
+	var invalid_collision = false
+	var touching_top_capy = false
+	var touching_other_capys = false
+	
+	for body in colliding_bodies:
+		if body == ground_body:
+			# Ground collision is only valid for the first capy (base capy)
+			if capys_stack.size() == 0:
+				valid_collision = true
+			else:
+				print("Game Over: Capy tried to land on ground instead of stack")
+				invalid_collision = true
+				break
+		else:
+			# Check if colliding with a capy in the stack
+			var capy_owner = find_capy_owner(body)
+			if capy_owner and capy_owner in capys_stack:
+				var capy_index = capys_stack.find(capy_owner)
+				var top_capy_index = capys_stack.size() - 1
+				
+				if capy_index == top_capy_index:
+					# Touching the top capy - this is good
+					touching_top_capy = true
+				else:
+					# Touching a capy that's not the top one - this is bad
+					touching_other_capys = true
+					print("Game Over: Capy is touching capy at index ", capy_index, " instead of only the top capy at index ", top_capy_index)
+	
+	# Determine if collision is valid
+	if capys_stack.size() == 0:
+		# First capy - can only touch ground
+		valid_collision = not touching_other_capys and not touching_top_capy
+	else:
+		# Subsequent capys - must touch ONLY the top capy, not any others
+		valid_collision = touching_top_capy and not touching_other_capys
+		if touching_other_capys:
+			invalid_collision = true
+	
+	# If there's an invalid collision, trigger game over
+	if invalid_collision:
+		trigger_game_over()
+		return
+		
+	# Check for collision with valid target and sufficient contact
+	if valid_collision:
+		var sufficient_contact = false
+		
+		if capys_stack.size() == 0:
+			# First capy landing on ground
+			sufficient_contact = current_capy.position.y >= ground_level - capy_height * 0.6
+		else:
+			# Capy landing on top of stack
+			var top_capy = capys_stack.back()
+			var vertical_distance = current_capy.position.y - top_capy.position.y
+			sufficient_contact = vertical_distance <= capy_height * 1.2 and vertical_distance >= capy_height * 0.3
+		
+		if sufficient_contact and rb.linear_velocity.length() < 150:
+			finalize_capy_placement()
 
 func handle_horizontal_movement(delta):
 	var rb = find_rigidbody(current_capy)

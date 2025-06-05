@@ -66,10 +66,28 @@ func _ready():
 	randomize()
 	ground_level = get_viewport_rect().size.y - ground_margin
 	start_x_position = get_viewport_rect().size.x / 2
+	
+	# Set up touch input action if it doesn't exist
+	setup_touch_input()
+	
 	create_ground()
 	place_base_capy()
 	setup_initial_camera()
 	setup_scoreboard()
+	
+func setup_touch_input():
+	# Create touch input action if it doesn't exist
+	if not InputMap.has_action("touch_drop"):
+		InputMap.add_action("touch_drop")
+		
+		# Add screen touch event
+		var touch_event = InputEventScreenTouch.new()
+		InputMap.action_add_event("touch_drop", touch_event)
+		
+		# Also add mouse click for desktop testing
+		var mouse_event = InputEventMouseButton.new()
+		mouse_event.button_index = MOUSE_BUTTON_LEFT
+		InputMap.action_add_event("touch_drop", mouse_event)
 	
 func setup_scoreboard():
 	scoreboard = get_node_or_null("/root/Main/UI/Scoreboard")
@@ -159,13 +177,21 @@ func _process(delta):
 			spawn_capy()
 			spawn_timer = 0.0
 	
+	# Handle input and movement - prevent input during game over
 	if current_capy and not is_capy_dropping:
-		handle_horizontal_movement(delta)
+		# Check for touch input (mobile) or keyboard input (desktop)
+		if Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("touch_drop"):
+			drop_current_capy()
+			return
 		
-		if capys_stack.size() > 1:
-			apply_stack_wobble(delta)
-			check_stack_stability(delta)
-			apply_height_based_global_stability(delta)
+		handle_horizontal_movement(delta)
+	
+	if capys_stack.size() > 1:
+		apply_stack_wobble(delta)
+		check_stack_stability(delta)
+		apply_height_based_global_stability(delta)
+
+
 
 func check_for_fallen_capys():
 	if tipping_over:  # Already triggered, don't check again
@@ -1056,20 +1082,18 @@ func get_capy_type_name(capy_instance):
 	return "BaseCapy"
 
 func _input(event):
-	if tipping_over:
+	# Handle restart key
+	if event is InputEventKey and event.pressed and event.keycode == KEY_R:
+		get_tree().reload_current_scene()
 		return
 	
-	if current_capy and not is_capy_dropping:
-		# Handle screen touch
-		if event is InputEventScreenTouch and event.pressed:
-			if not is_tap_over_ui(event.position):
-				drop_current_capy()
-		
-		# Also handle keyboard/controller
-		if Input.is_action_pressed("ui_accept"):
+	# Handle touch input for mobile devices
+	if event is InputEventScreenTouch:
+		if event.pressed and current_capy and not is_capy_dropping and not tipping_over:
 			drop_current_capy()
-			
-func is_tap_over_ui(position: Vector2) -> bool:
-	var viewport = get_viewport()
-	var ui_node = viewport.gui_pick(position)
-	return ui_node != null
+	
+	# Handle mouse clicks for desktop (optional - for testing on desktop)
+	elif event is InputEventMouseButton:
+		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			if current_capy and not is_capy_dropping and not tipping_over:
+				drop_current_capy()

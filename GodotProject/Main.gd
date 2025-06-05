@@ -29,33 +29,30 @@ var start_x_position := 0.0
 var is_capy_dropping := false
 var ground_body = null
 var wobble_time := 0.0
-var stack_joints := []
 var stack_balance_factor := 0.0
 var stack_height := 0
 var tipping_over := false
-var off_center_timer := 0.0
 var imbalance_duration := 0.0
 var base_capy_count := 0
 var target_camera_position = Vector2.ZERO
 var camera_speed = 2.0
 var first_frame_setup_done = false
+var game_over_timer := 0.0
+var game_over_delay := 2.0
 
 # Preload scenes
 var scenes = {
 	"BaseCapy": preload("res://BaseCapy.tscn"),
 	"BabyCapy": preload("res://BabyCapy.tscn"),
 	"LargeCapy": preload("res://LargeCapy.tscn"),
-	"SleepingCapy": preload("res://SleepingCapy.tscn"),
-	"StickyCapy": preload("res://StickyCapy.tscn")
+	"SleepingCapy": preload("res://SleepingCapy.tscn")
 }
 
-# Combined capybara type data with scene references
 var capy_types := {
-	"BaseCapy": {"height": 60.0, "mass": 1.0, "bounce": 0.12, "friction": 4.0, "gravity_scale": 2.2},
-	"BabyCapy": {"height": 40.0, "mass": 0.6, "bounce": 0.18, "friction": 3.0, "gravity_scale": 1.8},
-	"LargeCapy": {"height": 80.0, "mass": 2.0, "bounce": 0.08, "friction": 6.0, "gravity_scale": 2.8},
-	"SleepingCapy": {"height": 65.0, "mass": 1.2, "bounce": 0.05, "friction": 8.0, "gravity_scale": 2.0},
-	"StickyCapy": {"height": 55.0, "mass": 0.9, "bounce": 0.15, "friction": 5.0, "gravity_scale": 2.1, "sticky_range": 80.0, "sticky_strength": 2.5}
+	"BaseCapy": {"height": 60.0, "mass": 1.0, "gravity_scale": 2.2},
+	"BabyCapy": {"height": 40.0, "mass": 0.6, "gravity_scale": 1.8},
+	"LargeCapy": {"height": 80.0, "mass": 2.0, "gravity_scale": 2.8},
+	"SleepingCapy": {"height": 65.0, "mass": 1.2, "gravity_scale": 2.0}
 }
 
 func _ready():
@@ -113,19 +110,30 @@ func find_capy_owner(body):
 	return null
 
 func get_spawn_height():
-	var base_height = start_height
+	var consistent_drop_distance = capy_height * 8.0  # Increased from 4.0 to 8.0
+	
 	if capys_stack.size() > 0:
 		var top_capy = capys_stack.back()
-		var stack_factor = min(capys_stack.size() * 0.5, 3.0)
-		var spawn_distance = capy_height * (5 + stack_factor)
-		return min(top_capy.position.y - spawn_distance, ground_level - capy_height * 15)
-	return base_height
+		return top_capy.position.y - consistent_drop_distance
+	else:
+		# For first capy, spawn at same relative distance from ground
+		return ground_level - capy_height * 12.0  # Increased to maintain consistency
 
 func _process(delta):
 	update_camera(delta)
 	wobble_time += delta
 	
-	if current_capy == null and not is_capy_dropping and not tipping_over:
+	# Handle game over timer and restart
+	if tipping_over:
+		game_over_timer += delta
+		if game_over_timer >= game_over_delay:
+			get_tree().reload_current_scene()
+		return  # Don't process anything else during game over
+	
+	# Check for fallen capybaras
+	check_for_fallen_capys()
+	
+	if current_capy == null and not is_capy_dropping:
 		spawn_timer += delta
 		if spawn_timer >= spawn_delay:
 			spawn_capy()
@@ -139,11 +147,25 @@ func _process(delta):
 		
 		handle_horizontal_movement(delta)
 	
-	# Apply stack effects
+	# Apply simplified stack effects
 	if capys_stack.size() > 1:
 		apply_stack_wobble(delta)
 		check_stack_stability(delta)
-		queue_redraw()
+
+func check_for_fallen_capys():
+	if capys_stack.size() <= 1:  # Only base capy or empty
+		return
+		
+	# Check all capybaras except the base (index 0)
+	for i in range(1, capys_stack.size()):
+		var capy = capys_stack[i]
+		if not is_instance_valid(capy):
+			continue
+			
+		# If any non-base capy hits the ground, game over
+		if capy.position.y >= ground_level - capy_height * 0.3:
+			trigger_game_over()
+			return
 
 func handle_horizontal_movement(delta):
 	var rb = find_rigidbody(current_capy)
@@ -160,220 +182,84 @@ func handle_horizontal_movement(delta):
 	elif current_capy.position.x < start_x_position - max_horizontal_movement:
 		moving_right = true
 
-func update_camera(delta):
-	var camera = $Camera2D
-	if !camera:
-		return
-	
-	var viewport_height = get_viewport_rect().size.y
-	var viewport_width = get_viewport_rect().size.x
-	
-	# Initial frame setup
-	if not first_frame_setup_done:
-		camera.position = Vector2(viewport_width / 2, ground_level - (viewport_height * 0.5))
-		first_frame_setup_done = true
-		return
-	
-	# Handle base capy dropping
-	if capys_stack.size() == 0 and current_capy and is_capy_dropping:
-		target_camera_position = Vector2(viewport_width / 2, current_capy.position.y - (viewport_height * 0.3))
-		if target_camera_position.y > ground_level - (viewport_height * 0.4):
-			target_camera_position.y = ground_level - (viewport_height * 0.4)
-		camera.position = camera.position.lerp(target_camera_position, delta * camera_speed * 4)
-		return
-	
-	# Calculate stack bounds
-	var highest_point = ground_level
-	var lowest_point = ground_level
-	
-	if capys_stack.size() > 0:
-		for capy in capys_stack:
-			highest_point = min(highest_point, capy.position.y - (capy_height/2))
-			lowest_point = max(lowest_point, capy.position.y + (capy_height/2))
-	
-	# Dynamic camera positioning
-	var target_y
-	var MIN_CAPYS_FOR_DYNAMIC = 4
-	
-	if capys_stack.size() < MIN_CAPYS_FOR_DYNAMIC:
-		target_y = ground_level - (viewport_height * 0.4)
-		if current_capy and !is_capy_dropping and current_capy.position.y < camera.position.y - (viewport_height * 0.45):
-			var capy_screen_pos = current_capy.position.y - (viewport_height * 0.35)
-			target_y = min(target_y, capy_screen_pos)
-	else:
-		if current_capy and !is_capy_dropping:
-			target_y = current_capy.position.y - (viewport_height * 0.15)
-			var remaining_viewport = viewport_height * 0.85
-			var distance_to_lowest = abs(current_capy.position.y - lowest_point)
-			if distance_to_lowest > remaining_viewport * 0.8:
-				target_y = current_capy.position.y - (viewport_height * 0.1)
-		else:
-			var stack_height = lowest_point - highest_point
-			var weighted_midpoint = lowest_point - (stack_height * 0.75)
-			target_y = weighted_midpoint - (viewport_height * 0.6)
-		
-		# Visibility constraints
-		target_y = max(target_y, lowest_point - (viewport_height * 0.6))
-		target_y = min(target_y, highest_point - (viewport_height * 0.05))
-	
-	target_y = min(target_y, ground_level - (viewport_height * 0.5))
-	target_camera_position = Vector2(viewport_width / 2, target_y)
-	
-	# Adaptive camera speed
-	var adaptive_speed = camera_speed
-	if capys_stack.size() < MIN_CAPYS_FOR_DYNAMIC:
-		adaptive_speed *= 0.4
-	else:
-		var distance = (target_camera_position - camera.position).length()
-		adaptive_speed *= (1 + (distance / 300))
-	
-	camera.position = camera.position.lerp(target_camera_position, delta * adaptive_speed)
-
-func check_stack_stability(delta):
-	if capys_stack.size() <= 1:
-		return
-	
-	# Calculate basic stability factors
-	var sticky_count = 0
-	var stack_is_settled = true
-	
-	for i in range(capys_stack.size()):
-		var capy = capys_stack[i]
-		if get_capy_type_name(capy) == "StickyCapy":
-			sticky_count += 1
-		if not check_if_stack_settled(i):
-			stack_is_settled = false
-	
-	var imbalance = abs(stack_balance_factor)
-	
-	# Simple stability threshold based on key factors
-	var stability_threshold = 0.4 + (sticky_count * 0.2) + (0.3 if stack_is_settled else 0.0)
-	
-	# Reset tipping if stack has stabilized
-	if tipping_over and stack_is_settled and imbalance < stability_threshold * 0.6:
-		tipping_over = false
-		imbalance_duration = 0.0
-		call_deferred("_reestablish_stack_joints")
-		return
-	
-	# Skip tipping checks if already tipping
-	if tipping_over:
-		return
-	
-	# Simple tipping logic
-	if imbalance > stability_threshold:
-		imbalance_duration += delta * (2.0 if not stack_is_settled else 0.5)
-		
-		# Immediate tip for extreme imbalance
-		if imbalance > 0.8 or (imbalance > 0.6 and capys_stack.size() >= 4):
-			destabilize_stack()
-		# Gradual tip chance based on duration
-		elif imbalance_duration > 1.0 and randf() < 0.02:
-			destabilize_stack()
-	else:
-		imbalance_duration = max(0, imbalance_duration - delta * 2.0)
-
-# NEW: Function to re-establish joints when stack stabilizes
-func _reestablish_stack_joints():
-	# Clear any existing joints first
-	for joint in stack_joints:
-		if joint and is_instance_valid(joint):
-			joint.queue_free()
-	stack_joints.clear()
-	
-	# Re-establish joints between adjacent capys
-	for i in range(1, capys_stack.size()):
-		var lower_capy = capys_stack[i-1]
-		var upper_capy = capys_stack[i]
-		create_sticky_connection(lower_capy, upper_capy)
-	
-	# Re-stabilize all capys in the stack
-	for capy in capys_stack:
-		call_deferred("_stabilize_capy", capy)
-
 func destabilize_stack():
-	tipping_over = true
+	trigger_game_over()
+	
 	var tip_direction = sign(stack_balance_factor)
+	if tip_direction == 0:
+		tip_direction = 1 if randf() > 0.5 else -1
 	
-	# Free all joints
-	for joint in stack_joints:
-		if joint and is_instance_valid(joint):
-			joint.queue_free()
-	
-	# Apply tipping physics
+	# Apply dramatic tipping physics for visual effect
 	for i in range(capys_stack.size()):
 		var capy = capys_stack[i]
 		var rb = find_rigidbody(capy)
 		if rb:
-			rb.freeze_mode = RigidBody2D.FREEZE_MODE_KINEMATIC
-			rb.gravity_scale = 1.3
-			
 			var height_factor = float(i) / max(1, capys_stack.size() - 1)
-			var impulse_strength = 70.0 * height_factor
-			var random_factor = randf() * 0.4 + 0.8
+			var impulse_strength = 150.0 * height_factor
 			
-			rb.apply_impulse(Vector2.ZERO, Vector2(tip_direction * impulse_strength * random_factor, -impulse_strength * 0.3 * random_factor))
-			rb.apply_torque_impulse(tip_direction * 500 * height_factor * random_factor)
-	
-	# Reset timer
-	var timer = Timer.new()
-	timer.wait_time = 4.0
-	timer.one_shot = true
-	add_child(timer)
-	timer.connect("timeout", Callable(self, "_on_reset_timer_timeout"))
-	timer.start()
+			rb.apply_impulse(Vector2.ZERO, Vector2(tip_direction * impulse_strength, -impulse_strength * 0.3))
+			rb.apply_torque_impulse(tip_direction * 1000 * height_factor)
 
-func _on_reset_timer_timeout():
-	get_tree().reload_current_scene()
+func trigger_game_over():
+	if tipping_over:
+		return  # Already triggered
+		
+	tipping_over = true
+	print("Game Over! Stack collapsed!")
+	
+	# Stop spawning new capybaras immediately
+	if current_capy and not is_capy_dropping:
+		# Remove the current moving capybara
+		current_capy.queue_free()
+		current_capy = null
+	
+	# Stop any ongoing spawning
+	spawn_timer = 0.0
+	is_capy_dropping = false
+	
+	# Start restart timer
+	game_over_timer = 0.0
 
 func apply_stack_wobble(delta):
 	calculate_stack_balance()
 	
+	# Apply gentle corrective forces directly to rigidbodies
 	for i in range(capys_stack.size()):
 		var capy = capys_stack[i]
 		var rb = find_rigidbody(capy)
-		if rb and rb.freeze_mode == RigidBody2D.FREEZE_MODE_KINEMATIC:
+		if rb:
 			var height_factor = float(i) / max(1, capys_stack.size() - 1)
-			var stack_weight_above = calculate_stack_weight_above(i)
+			var depth_factor = float(capys_stack.size() - i) / capys_stack.size()
 			
-			# Check if stack has settled in a tilted position
-			var is_settled = check_if_stack_settled(i)
+			# Gentle centering force (much weaker than before)
+			var centering_force = -stack_balance_factor * 15.0 * height_factor * (1.0 - depth_factor * 0.7)
+			rb.apply_impulse(Vector2(centering_force * delta, 0), Vector2.ZERO)
 			
-			# If settled, greatly reduce wobble forces
-			var settle_factor = 1.0
-			if is_settled:
-				settle_factor = 0.1  # Greatly reduce forces when settled
-			
-			# Slightly reduced weight dampening for more flow
-			var weight_damping = min(stack_weight_above * 0.18, 0.75)
-			var wobble_strength = wobble_factor * abs(stack_balance_factor) * height_factor * (1.0 - weight_damping) * settle_factor
-			
-			# Slightly increased wobble but reduced when settled
-			var wobble_noise = sin(wobble_time * wobble_frequency * 1.1 * (i + 1)) * wobble_amplitude * 1.2 * height_factor * settle_factor
-			wobble_noise += (randf() * 2 - 1) * height_factor * 0.6 * settle_factor
-			wobble_noise *= (1.0 - weight_damping * 0.9)
-			
-			var stability_factor = max(0, 1.0 - abs(stack_balance_factor) * 1.4)
-			
-			# Reduce centering force when settled to allow tilted position
-			var centering_force_factor = 1.0
-			if is_settled:
-				centering_force_factor = 0.05  # Much less centering when settled
-			
-			var centering_force = -stack_balance_factor * auto_center_force * height_factor * stability_factor * 0.9 * centering_force_factor
-			
-			# Weight increases centering force (but still reduced when settled)
-			centering_force *= (1.0 + stack_weight_above * 0.28)
-			
-			# Apply reduced forces when settled
-			rb.apply_impulse(Vector2(centering_force + wobble_noise, 0) * delta * 80, Vector2.ZERO)
-			
-			if i > 0:
-				var torque_damping = min(stack_weight_above * 0.28, 0.68)
-				var torque_force = wobble_strength * 70 * delta * (1.0 - torque_damping) * settle_factor
-				rb.apply_torque_impulse((randf() * 2 - 1) * torque_force)
+			# Add weight-based downward force for compression
+			var compression = depth_factor * i * 8.0 * delta
+			rb.apply_impulse(Vector2.ZERO, Vector2(0, compression))
 
-# New function to check if stack has settled in position
+func check_stack_stability(delta):
+	if capys_stack.size() <= 1 or tipping_over:
+		return
+	
+	var imbalance = abs(stack_balance_factor)
+	var stability_threshold = 0.6  # Reduced from 0.75 for earlier detection
+	
+	# Also check for rapid movement indicating instability
+	var top_capy = capys_stack.back()
+	var rb = find_rigidbody(top_capy)
+	var rapid_movement = false
+	if rb:
+		rapid_movement = rb.linear_velocity.length() > 200 or abs(rb.angular_velocity) > 5.0
+	
+	if imbalance > stability_threshold or rapid_movement:
+		imbalance_duration += delta
+		if imbalance_duration > 2.0:  # Reduced from 3.0 seconds
+			destabilize_stack()
+	else:
+		imbalance_duration = max(0, imbalance_duration - delta)
+
 func check_if_stack_settled(capy_index):
 	if capys_stack.size() <= 1:
 		return true
@@ -383,19 +269,21 @@ func check_if_stack_settled(capy_index):
 	if not rb:
 		return true
 	
-	# Check if capy has low velocity (indicating it has settled)
-	var velocity_threshold = 15.0
-	var angular_velocity_threshold = 0.3
+	# More lenient velocity thresholds
+	var velocity_threshold = 25.0  # Increased from 15.0
+	var angular_velocity_threshold = 0.5  # Increased from 0.3
 	
 	var is_velocity_low = rb.linear_velocity.length() < velocity_threshold
 	var is_angular_velocity_low = abs(rb.angular_velocity) < angular_velocity_threshold
 	
-	# Check if the stack has been in a tilted state for a while
+	# Check if the stack has been in a tilted state for a reasonable time
 	var imbalance = abs(stack_balance_factor)
-	var has_significant_tilt = imbalance > 0.15
+	var has_some_tilt = imbalance > 0.1  # Reduced from 0.15
 	
-	# Consider it settled if it's been tilted and has low movement
-	return has_significant_tilt and is_velocity_low and is_angular_velocity_low
+	# Also consider it settled if velocities are very low, even without tilt
+	var is_very_still = rb.linear_velocity.length() < 10.0 and abs(rb.angular_velocity) < 0.2
+	
+	return (has_some_tilt and is_velocity_low and is_angular_velocity_low) or is_very_still
 
 func calculate_stack_balance():
 	if capys_stack.size() <= 1:
@@ -404,13 +292,9 @@ func calculate_stack_balance():
 	
 	var stack_center_x = 0.0
 	var total_weight = 0.0
-	var sticky_stabilization = 0.0
 	
 	for i in range(capys_stack.size()):
 		var capy = capys_stack[i]
-		if get_capy_type_name(capy) == "StickyCapy":
-			sticky_stabilization += 0.3
-		
 		var weight = pow(2.5, i)
 		stack_center_x += capy.position.x * weight
 		total_weight += weight
@@ -421,7 +305,6 @@ func calculate_stack_balance():
 	var base_x = capys_stack[0].position.x
 	var screen_width = get_viewport_rect().size.x
 	var raw_balance = (stack_center_x - base_x) / (screen_width * 0.15)
-	raw_balance *= (1.0 - min(sticky_stabilization, 0.8))
 	
 	stack_balance_factor = clamp(raw_balance, -1, 1)
 	stack_height = capys_stack.size()
@@ -444,26 +327,121 @@ func drop_current_capy():
 		
 		rb.linear_velocity = Vector2(0, base_velocity)
 
-# Combined rigidbody setup function
 func setup_rigidbody(rb, capy_type_name, is_dropping = false):
 	var capy_data = capy_types[capy_type_name]
 	
-	rb.gravity_scale = capy_data.gravity_scale if is_dropping else 2.5
+	# Standard rigidbody settings
+	rb.gravity_scale = capy_data.gravity_scale if is_dropping else 1.8
 	rb.mass = capy_data.mass
 	rb.freeze_mode = RigidBody2D.FREEZE_MODE_KINEMATIC
 	rb.contact_monitor = true
-	rb.max_contacts_reported = 8
+	rb.max_contacts_reported = 10
 	rb.collision_layer = 1
 	rb.collision_mask = 1
 	
+	# High friction, low bounce physics material
 	if rb.physics_material_override == null:
 		rb.physics_material_override = PhysicsMaterial.new()
-	rb.physics_material_override.bounce = capy_data.bounce
-	rb.physics_material_override.friction = capy_data.friction
 	
-	# Apply gentler physics for early stack positions
-	if not is_dropping and capys_stack.size() <= 2:
-		apply_gentle_early_physics(rb, capys_stack.size())
+	rb.physics_material_override.bounce = 0.05  # Very low bounce
+	rb.physics_material_override.friction = 6.0  # High friction
+	
+	# Heavy damping to prevent jittering
+	rb.linear_damp = 3.0
+	rb.angular_damp = 5.0
+
+func update_camera(delta):
+	var camera = $Camera2D
+	if !camera:
+		return
+	
+	var viewport_height = get_viewport_rect().size.y
+	var viewport_width = get_viewport_rect().size.x
+	
+	# Initial frame setup
+	if not first_frame_setup_done:
+		camera.position = Vector2(viewport_width / 2, ground_level - (viewport_height * 0.5))
+		first_frame_setup_done = true
+		return
+	
+	# Game over camera behavior - show the collapse
+	if tipping_over:
+		# Find the vertical center of the collapsing stack, keep horizontal centered
+		var stack_center_y = ground_level
+		var valid_capys = 0
+		
+		for capy in capys_stack:
+			if is_instance_valid(capy):
+				stack_center_y = min(stack_center_y, capy.position.y)
+				valid_capys += 1
+		
+		if valid_capys > 0:
+			# Position camera to show the collapse nicely - only vertical adjustment
+			target_camera_position = Vector2(viewport_width / 2, stack_center_y - viewport_height * 0.3)
+			# Clamp vertical position to reasonable bounds
+			target_camera_position.y = clamp(target_camera_position.y, ground_level - viewport_height * 0.8, ground_level - viewport_height * 0.2)
+		else:
+			target_camera_position = Vector2(viewport_width / 2, ground_level - viewport_height * 0.4)
+		
+		# Smooth camera movement to show collapse
+		camera.position = camera.position.lerp(target_camera_position, delta * camera_speed * 3)
+		return
+	
+	# Rest of the normal camera logic remains the same...
+	# Handle base capy dropping
+	if capys_stack.size() == 0 and current_capy and is_capy_dropping:
+		target_camera_position = Vector2(viewport_width / 2, current_capy.position.y - (viewport_height * 0.3))
+		if target_camera_position.y > ground_level - (viewport_height * 0.4):
+			target_camera_position.y = ground_level - (viewport_height * 0.4)
+		camera.position = camera.position.lerp(target_camera_position, delta * camera_speed * 4)
+		return
+	
+	# Calculate stack bounds  
+	var highest_point = ground_level
+	var lowest_point = ground_level
+	
+	if capys_stack.size() > 0:
+		for capy in capys_stack:
+			highest_point = min(highest_point, capy.position.y - (capy_height/2))
+			lowest_point = max(lowest_point, capy.position.y + (capy_height/2))
+	
+	# Dynamic camera positioning
+	var target_y
+	var MIN_CAPYS_FOR_DYNAMIC = 4
+	
+	if capys_stack.size() < MIN_CAPYS_FOR_DYNAMIC:
+		target_y = ground_level - (viewport_height * 0.4)
+		
+		# Show current capy if it's moving above
+		if current_capy and !is_capy_dropping and current_capy.position.y < camera.position.y - (viewport_height * 0.45):
+			var capy_screen_pos = current_capy.position.y - (viewport_height * 0.35)
+			target_y = min(target_y, capy_screen_pos)
+	else:
+		# For larger stacks - just follow the natural stack growth
+		if current_capy and !is_capy_dropping:
+			target_y = current_capy.position.y - (viewport_height * 0.15)
+		else:
+			# No current capy - follow the top of the stack naturally
+			var stack_height = lowest_point - highest_point
+			var weighted_midpoint = lowest_point - (stack_height * 0.75)
+			target_y = weighted_midpoint - (viewport_height * 0.6)
+	
+	# Visibility constraints
+	target_y = max(target_y, lowest_point - (viewport_height * 0.7))  # Don't go too low
+	target_y = min(target_y, highest_point - (viewport_height * 0.1))  # Don't go too high
+	target_y = min(target_y, ground_level - (viewport_height * 0.4))    # Ground level limit
+	
+	target_camera_position = Vector2(viewport_width / 2, target_y)
+	
+	# Adaptive camera speed
+	var adaptive_speed = camera_speed
+	if capys_stack.size() < MIN_CAPYS_FOR_DYNAMIC:
+		adaptive_speed *= 0.5
+	else:
+		var distance = (target_camera_position - camera.position).length()
+		adaptive_speed *= (1 + (distance / 400))
+	
+	camera.position = camera.position.lerp(target_camera_position, delta * adaptive_speed)
 
 func find_rigidbody(node):
 	if node is RigidBody2D:
@@ -506,74 +484,43 @@ func finalize_capy_placement():
 	if current_capy:
 		var rb = find_rigidbody(current_capy)
 		if rb:
-			# Gentler velocity reduction for early stack
-			var velocity_reduction = 0.3 if capys_stack.size() > 2 else 0.6
-			rb.linear_velocity *= velocity_reduction
-			rb.angular_velocity *= velocity_reduction
+			# Reduce velocity for softer landing
+			rb.linear_velocity *= 0.4
+			rb.angular_velocity *= 0.2
 			
-			# Extra gentle settling for second capy
-			if capys_stack.size() == 1:  # This will be the second capy
-				rb.linear_velocity.y = min(rb.linear_velocity.y, 50)  # Cap downward velocity
-				rb.apply_impulse(Vector2.ZERO, Vector2(0, -30))  # Small upward impulse to cushion
-			
-			# Gentler settling forces
-			if capys_stack.size() > 0:
-				var top_capy = capys_stack.back()
-				var horizontal_offset = abs(current_capy.position.x - top_capy.position.x)
-				var offset_factor = horizontal_offset / capy_height
-				
-				if offset_factor > 0.8:
-					# Much gentler settling forces for early stack
-					var settling_force = 80 if capys_stack.size() > 2 else 40
-					rb.apply_impulse(Vector2.ZERO, Vector2(0, settling_force))
-					var correction_direction = sign(top_capy.position.x - current_capy.position.x)
-					var correction_force = 40 if capys_stack.size() > 2 else 20
-					rb.apply_impulse(Vector2.ZERO, Vector2(correction_direction * correction_force, 0))
-			
-			call_deferred("_stabilize_capy", current_capy)
+			# Apply settling force
+			rb.apply_impulse(Vector2.ZERO, Vector2(0, 50))
 		
-		# More lenient tipping thresholds for early stack
-		if capys_stack.size() > 0:
-			var top_capy = capys_stack.back()
-			var horizontal_offset = abs(current_capy.position.x - top_capy.position.x)
-			var offset_factor = horizontal_offset / capy_height
-			
-			var current_type = get_capy_type_name(current_capy)
-			var below_type = get_capy_type_name(top_capy)
-			var has_sticky = (current_type == "StickyCapy" or below_type == "StickyCapy")
-			
-			# Extra lenient for early stack to prevent immediate game over
-			var early_stack_bonus = 0.4 if capys_stack.size() <= 2 else 0.0
-			var immediate_tip_threshold = (1.2 if has_sticky else 0.9) + early_stack_bonus
-			var delayed_tip_threshold = (1.0 if has_sticky else 0.7) + early_stack_bonus
-			
-			if offset_factor > immediate_tip_threshold:
-				capys_stack.append(current_capy)
-				stack_balance_factor = sign(current_capy.position.x - top_capy.position.x) * 0.9
-				destabilize_stack()
-				return
-			elif offset_factor > delayed_tip_threshold and capys_stack.size() >= 3:
-				capys_stack.append(current_capy)
-				stack_balance_factor = sign(current_capy.position.x - top_capy.position.x) * 0.6
-				imbalance_duration = 0.8
-			else:
-				capys_stack.append(current_capy)
-		else:
-			capys_stack.append(current_capy)
+		# Add to stack without creating joints
+		capys_stack.append(current_capy)
 		
-		# Only create joint if this isn't the base capy and we're not tipping
-		if capys_stack.size() > 1 and not tipping_over:
+		# Make base capy extra stable
+		if capys_stack.size() == 1:
+			create_ground_anchor(current_capy)  # This now just increases mass/friction
+		
+		var scoreboard = get_node("/root/Main/UI/Scoreboard")
+		if scoreboard:
+			scoreboard.add_score(1)
+			
+		# Apply sticky physics instead of joints
+		if capys_stack.size() > 1:
 			create_sticky_connection(capys_stack[capys_stack.size() - 2], current_capy)
 		
 		current_capy = null
 		is_capy_dropping = false
 		spawn_timer = 0.0
 		
-		if capys_stack.size() == 1:
-			call_deferred("spawn_capy")
-		
 		calculate_stack_balance()
 		
+func create_ground_anchor(capy):
+	# Don't create any anchor joint - just make base capy heavier and stickier
+	var rb = find_rigidbody(capy)
+	if rb:
+		rb.mass = 3.0  # Make base capy much heavier
+		if rb.physics_material_override:
+			rb.physics_material_override.friction = 12.0
+			rb.physics_material_override.bounce = 0.01
+
 func apply_gentle_early_physics(rb, stack_position):
 	# Make early capys less bouncy and more stable
 	if stack_position <= 2:
@@ -586,140 +533,75 @@ func apply_gentle_early_physics(rb, stack_position):
 		rb.physics_material_override.friction *= 1.5
 
 func create_sticky_connection(lower_capy, upper_capy):
+	# Don't create any joints at all - use physics forces instead
 	var lower_rb = find_rigidbody(lower_capy)
 	var upper_rb = find_rigidbody(upper_capy)
 	
 	if lower_rb and upper_rb:
-		var lower_type = get_capy_type_name(lower_capy)
-		var upper_type = get_capy_type_name(upper_capy)
-		var has_sticky_capy = (lower_type == "StickyCapy" or upper_type == "StickyCapy")
-		
-		var horizontal_offset = abs(upper_rb.global_position.x - lower_rb.global_position.x)
-		var offset_factor = horizontal_offset / capy_height
-		
-		# Calculate stack weight above this connection
-		var stack_weight_above = calculate_stack_weight_above(capys_stack.size() - 1)
-		
-		# Better centered placement gets much stronger connection
-		var center_bonus = max(0, 1.0 - offset_factor * 2.0)  # Strong bonus for centered placement
-		
-		# Only create weak connection if very off-center AND no stabilizing factors
-		if offset_factor > 0.8 and stack_weight_above < 1.0 and not has_sticky_capy and center_bonus < 0.2:
-			create_weak_connection(lower_rb, upper_rb)
-		else:
-			# Create stronger connection with center bonus
-			create_multi_point_connection(lower_rb, upper_rb, has_sticky_capy, stack_weight_above, offset_factor, center_bonus)
+		# Just increase friction and reduce bounce for better stacking
+		if lower_rb.physics_material_override:
+			lower_rb.physics_material_override.friction = 8.0
+			lower_rb.physics_material_override.bounce = 0.02
+		if upper_rb.physics_material_override:
+			upper_rb.physics_material_override.friction = 8.0
+			upper_rb.physics_material_override.bounce = 0.02
+			
+func calculate_placement_quality(lower_capy, upper_capy):
+	var lower_rb = find_rigidbody(lower_capy)
+	var upper_rb = find_rigidbody(upper_capy)
+	
+	if not lower_rb or not upper_rb:
+		return 0.0
+	
+	var horizontal_offset = abs(upper_rb.global_position.x - lower_rb.global_position.x)
+	var offset_factor = horizontal_offset / capy_height
+	
+	# Perfect placement is when offset is minimal
+	var centering_quality = max(0, 1.0 - offset_factor * 1.5)
+	
+	# Velocity quality - slower placement is better
+	var velocity_magnitude = upper_rb.linear_velocity.length()
+	var velocity_quality = max(0, 1.0 - velocity_magnitude / 200.0)
+	
+	# Angular velocity quality - less rotation is better
+	var angular_quality = max(0, 1.0 - abs(upper_rb.angular_velocity) / 2.0)
+	
+	# Combined quality score
+	return (centering_quality * 0.5 + velocity_quality * 0.3 + angular_quality * 0.2)
 
-func create_multi_point_connection(lower_rb, upper_rb, has_sticky_capy, stack_weight_above, offset_factor, center_bonus = 0.0):
-	var connection_strength = calculate_connection_strength(has_sticky_capy, stack_weight_above, offset_factor, center_bonus)
+func calculate_connection_strength(stack_weight_above, offset_factor, center_bonus = 0.0, stickiness_factor = 1.0, placement_quality = 0.0):
+	var base_strength = 0.25  # Slightly increased from 0.2
 	
-	# Create main connection point - stronger for centered capys
-	var main_joint = PinJoint2D.new()
-	add_child(main_joint)
-	main_joint.position = (lower_rb.global_position + upper_rb.global_position) / 2
-	main_joint.node_a = lower_rb.get_path()
-	main_joint.node_b = upper_rb.get_path()
+	# Enhanced strength scaling based on stack height
+	var total_height = capys_stack.size()
+	var height_bonus = min(total_height * 0.1, 0.5)  # Increased height bonus
 	
-	# Smoother joint settings to prevent twitching
-	var base_softness = 0.7 - connection_strength * 0.3 - center_bonus * 0.2
-	var base_bias = 0.1 + connection_strength * 0.2 + center_bonus * 0.15
-	
-	main_joint.softness = clamp(base_softness, 0.3, 0.9)
-	main_joint.bias = clamp(base_bias, 0.05, 0.4)
-	main_joint.disable_collision = false
-	stack_joints.append(main_joint)
-	
-	# Only add stabilizing joints for very strong connections to avoid conflicts
-	if (stack_weight_above > 1.5 or has_sticky_capy) and center_bonus > 0.6:
-		create_stabilizing_joints(lower_rb, upper_rb, connection_strength, center_bonus)
-
-func create_stabilizing_joints(lower_rb, upper_rb, strength, center_bonus = 0.0):
-	var offset = capy_height * 0.25  # Reduced offset to prevent over-constraint
-	var enhanced_strength = strength + center_bonus * 0.2  # Reduced bonus
-	
-	# Create only one additional joint to avoid over-constraining
-	var side_joint = PinJoint2D.new()
-	add_child(side_joint)
-	
-	# Offset to the side with less constraint conflict
-	var side_offset = offset * (1 if randf() > 0.5 else -1)
-	side_joint.position = Vector2((lower_rb.global_position.x + upper_rb.global_position.x) / 2 + side_offset, 
-								  (lower_rb.global_position.y + upper_rb.global_position.y) / 2)
-	side_joint.node_a = lower_rb.get_path()
-	side_joint.node_b = upper_rb.get_path()
-	
-	# Much softer settings to prevent fighting with main joint
-	var stab_softness = 0.85 - enhanced_strength * 0.15
-	var stab_bias = 0.08 + enhanced_strength * 0.12
-	
-	side_joint.softness = clamp(stab_softness, 0.6, 0.95)
-	side_joint.bias = clamp(stab_bias, 0.03, 0.25)
-	side_joint.disable_collision = false
-	stack_joints.append(side_joint)
-
-func calculate_connection_strength(has_sticky_capy, stack_weight_above, offset_factor, center_bonus = 0.0):
-	var base_strength = 0.2
-	
-	# Major bonus for centered placement
 	base_strength += center_bonus * 0.6
+	base_strength += min(stack_weight_above * 0.25, 0.7)
+	base_strength += (stickiness_factor - 1.0) * 0.5  # Increased stickiness impact
+	base_strength += placement_quality * 0.3
+	base_strength += height_bonus
 	
-	if has_sticky_capy:
-		base_strength += 0.35
-	
-	# Weight adds significant strength
-	base_strength += min(stack_weight_above * 0.2, 0.6)
-	
-	# Offset reduces strength, but less severely for well-centered capys
-	var offset_penalty = offset_factor * (0.5 - center_bonus * 0.3)
+	# Reduced offset penalty for more forgiveness
+	var offset_penalty = offset_factor * (0.3 - center_bonus * 0.3 - (stickiness_factor - 1.0) * 0.15 - height_bonus * 0.3)
 	base_strength -= offset_penalty
 	
-	return clamp(base_strength, 0.1, 1.0)
+	return clamp(base_strength, 0.1, 1.0)  # Increased minimum strength
 
-func create_weak_connection(lower_rb, upper_rb):
-	var joint = PinJoint2D.new()
-	add_child(joint)
-	joint.position = (lower_rb.global_position + upper_rb.global_position) / 2
-	joint.node_a = lower_rb.get_path()
-	joint.node_b = upper_rb.get_path()
-	joint.softness = 0.98  # Slightly softer (was 0.95)
-	joint.bias = 0.08      # Slightly less bias (was 0.1)
-	joint.disable_collision = false
-	stack_joints.append(joint)
-
-# Add this new function
-func calculate_stack_weight_above(index):
-	var weight = 0.0
-	for i in range(index + 1, capys_stack.size()):
-		if i < capys_stack.size():
-			var capy_type = get_capy_type_name(capys_stack[i])
-			weight += capy_types[capy_type]["mass"]
-	return weight
-
-func _stabilize_capy(capy):
-	var rb = find_rigidbody(capy)
-	if rb:
-		var stack_position = capys_stack.find(capy)
-		var stack_weight_above = calculate_stack_weight_above(stack_position)
-		
-		rb.freeze_mode = RigidBody2D.FREEZE_MODE_KINEMATIC
-		rb.freeze = false
-		
-		# Treat all capys the same - remove base capy special case
-		var base_gravity = 0.5
-		var weight_gravity_reduction = min(stack_weight_above * 0.08, 0.18)
-		rb.gravity_scale = base_gravity - weight_gravity_reduction
-		
-		var normalized_height = float(stack_position) / max(1, capys_stack.size() - 1)
-		var base_mass = 0.95 + (1.0 - normalized_height) * 0.75
-		rb.mass = base_mass + stack_weight_above * 0.25
-		
-		var base_damp = 2.2
-		var weight_damp_bonus = stack_weight_above * 0.45
-		rb.linear_damp = base_damp + weight_damp_bonus
-		rb.angular_damp = base_damp + weight_damp_bonus
+func apply_weight_compression(delta):
+	for i in range(capys_stack.size()):
+		var capy = capys_stack[i]
+		var rb = find_rigidbody(capy)
+		if rb:
+			var weight_above = calculate_stack_weight_above(i)
+			if weight_above > 0.2:
+				var compression_force = weight_above * 12.0 * delta
+				var position_factor = float(capys_stack.size() - i) / capys_stack.size()
+				compression_force *= position_factor
+				rb.apply_impulse(Vector2.ZERO, Vector2(0, compression_force))
 
 func spawn_capy():
-	if current_capy != null or is_capy_dropping:
+	if current_capy != null or is_capy_dropping or tipping_over:
 		return
 	
 	var capy_type_name = get_capy_type_to_spawn()
@@ -741,12 +623,54 @@ func spawn_capy():
 		rb.linear_damp = 0.25
 		rb.angular_damp = 4.5
 		rb.linear_velocity = Vector2(move_speed * (1 if moving_right else -1), 0)
-		
-		# StickyCapy special effects
-		if capy_type_name == "StickyCapy":
-			rb.body_entered.connect(_on_sticky_capy_contact.bind(capy_instance))
 	
 	current_capy = capy_instance
+
+func calculate_stack_weight_above(index):
+	var weight = 0.0
+	for i in range(index + 1, capys_stack.size()):
+		if i < capys_stack.size():
+			var capy_type = get_capy_type_name(capys_stack[i])
+			weight += capy_types[capy_type]["mass"]
+	return weight
+
+func _stabilize_capy(capy):
+	var rb = find_rigidbody(capy)
+	if rb:
+		var stack_position = capys_stack.find(capy)
+		var stack_weight_above = calculate_stack_weight_above(stack_position)
+		var total_stack_height = capys_stack.size()
+		
+		rb.freeze_mode = RigidBody2D.FREEZE_MODE_KINEMATIC
+		rb.freeze = false
+		
+		# Enhanced stability scaling based on stack height and position
+		var depth_factor = float(total_stack_height - stack_position) / max(1, total_stack_height)
+		var height_multiplier = pow(total_stack_height / 5.0, 0.6)  # Logarithmic scaling
+		
+		# Progressive gravity reduction for lower capybaras, but apply weight compression
+		var base_gravity = 0.5
+		var weight_gravity_reduction = min(stack_weight_above * 0.12, 0.25)
+		var depth_gravity_reduction = depth_factor * 0.15 * height_multiplier
+		rb.gravity_scale = max(0.1, base_gravity - weight_gravity_reduction - depth_gravity_reduction)
+		
+		# Apply weight compression - push capybaras down based on weight above
+		if stack_weight_above > 0.5:
+			var compression_force = stack_weight_above * 25.0 * depth_factor
+			rb.apply_impulse(Vector2.ZERO, Vector2(0, compression_force))
+		
+		# Enhanced mass scaling for better stability at bottom
+		var base_mass = 0.95 + depth_factor * 1.2
+		var weight_mass_bonus = stack_weight_above * 0.35
+		var stability_mass_bonus = depth_factor * height_multiplier * 0.8
+		rb.mass = base_mass + weight_mass_bonus + stability_mass_bonus
+		
+		# Increased damping for lower capybaras to reduce wobbling
+		var base_damp = 2.2
+		var weight_damp_bonus = stack_weight_above * 0.5
+		var depth_damp_bonus = depth_factor * 1.8 * height_multiplier
+		rb.linear_damp = base_damp + weight_damp_bonus + depth_damp_bonus
+		rb.angular_damp = base_damp + weight_damp_bonus + depth_damp_bonus * 1.2
 
 func get_capy_type_to_spawn():
 	if base_capy_count < base_capy_count_threshold:
@@ -754,10 +678,9 @@ func get_capy_type_to_spawn():
 	
 	var choices = [
 		{"type": "BaseCapy", "weight": 25},
-		{"type": "BabyCapy", "weight": 20},
-		{"type": "LargeCapy", "weight": 20},
-		{"type": "SleepingCapy", "weight": 20},
-		{"type": "StickyCapy", "weight": 20}
+		{"type": "BabyCapy", "weight": 25},
+		{"type": "LargeCapy", "weight": 25},
+		{"type": "SleepingCapy", "weight": 25}
 	]
 	
 	var total_weight = 0
@@ -780,15 +703,6 @@ func get_capy_type_name(capy_instance):
 		if scene_path.ends_with(type_name + ".tscn"):
 			return type_name
 	return "BaseCapy"
-
-func _on_sticky_capy_contact(body, sticky_capy):
-	if is_capy_dropping and current_capy == sticky_capy:
-		var contact_capy = find_capy_owner(body)
-		if contact_capy in capys_stack:
-			var rb = find_rigidbody(sticky_capy)
-			if rb:
-				rb.linear_velocity *= 0.6
-				rb.angular_velocity *= 0.4
 
 func _draw():
 	draw_line(Vector2(0, ground_level), Vector2(get_viewport_rect().size.x, ground_level), Color.WHITE, 2.0)

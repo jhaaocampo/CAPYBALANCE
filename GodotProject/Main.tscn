@@ -22,10 +22,11 @@ offset_bottom = 40.0
 scale = Vector2(0.672873, 0.624085)
 expand_mode = 1
 stretch_mode = 2
+metadata/_edit_use_anchors_ = true
 
 [node name="Backgorunds" type="Sprite2D" parent="ParallaxBackground/ParallaxLayer"]
-position = Vector2(359, -1673)
-scale = Vector2(0.388933, 0.425767)
+position = Vector2(353, -2446)
+scale = Vector2(0.409854, 0.540666)
 texture = ExtResource("4_cm0pq")
 
 [node name="Camera2D" type="Camera2D" parent="."]

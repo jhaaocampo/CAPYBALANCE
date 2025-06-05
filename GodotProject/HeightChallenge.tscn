@@ -1,0 +1,33 @@
+[gd_scene load_steps=5 format=3 uid="uid://ca2tor781fkxo"]
+
+[ext_resource type="Script" uid="uid://csp2vo1kr7j6c" path="res://HeightChallenge.gd" id="1_nowsr"]
+[ext_resource type="PackedScene" uid="uid://2qv47ukpm61l" path="res://UI.tscn" id="2_4337q"]
+[ext_resource type="Script" uid="uid://dgtvbxi01c25g" path="res://InfiniteBackground.gd" id="3_jcm3x"]
+[ext_resource type="Texture2D" uid="uid://b4tkpsgdk67c6" path="res://Backgorunds.png" id="4_608aq"]
+
+[node name="HeightChallenge" type="Node2D"]
+script = ExtResource("1_nowsr")
+
+[node name="UI" parent="." instance=ExtResource("2_4337q")]
+
+[node name="ParallaxBackground" type="ParallaxBackground" parent="."]
+script = ExtResource("3_jcm3x")
+
+[node name="ParallaxLayer" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_scale = Vector2(1, 0.8)
+
+[node name="TextureRect" type="TextureRect" parent="ParallaxBackground/ParallaxLayer"]
+offset_right = 40.0
+offset_bottom = 40.0
+scale = Vector2(0.672873, 0.624085)
+expand_mode = 1
+stretch_mode = 2
+metadata/_edit_use_anchors_ = true
+
+[node name="Backgorunds" type="Sprite2D" parent="ParallaxBackground/ParallaxLayer"]
+position = Vector2(353, -2446)
+scale = Vector2(0.409854, 0.540666)
+texture = ExtResource("4_608aq")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(357, 642)

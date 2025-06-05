@@ -9,8 +9,8 @@ extends Control
 @onready var background = $Background
 
 # Scene paths - Adjust these to match your actual scene paths
-const HEIGHT_CHALLENGE_SCENE = "res://Main.tscn"
-const ENDLESS_STACK_SCENE = "res://EndlessStackGame.tscn"
+const HEIGHT_CHALLENGE_SCENE = "res://HeightChallenge.tscn"
+const ENDLESS_STACK_SCENE = "res://Main.tscn"
 const LANDING_PAGE_SCENE = "res://LandingPage.tscn"
 const SETTINGS_SCENE = "res://scenes/SettingsScene.tscn"
 

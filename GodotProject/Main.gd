@@ -1,3 +1,5 @@
+# Main.gd
+
 extends Node2D
 
 # Settings
@@ -43,6 +45,7 @@ var camera_speed = 2.0
 var first_frame_setup_done = false
 var game_over_timer := 0.0
 var game_over_delay := 2.0
+var scoreboard = null
 
 # Preload scenes
 var scenes = {
@@ -66,6 +69,10 @@ func _ready():
 	create_ground()
 	place_base_capy()
 	setup_initial_camera()
+	setup_scoreboard()
+	
+func setup_scoreboard():
+	scoreboard = get_node_or_null("/root/Main/UI/Scoreboard")
 
 func setup_initial_camera():
 	var camera = $Camera2D
@@ -212,6 +219,10 @@ func trigger_game_over():
 		
 	tipping_over = true
 	print("Game Over! Stack collapsed!")
+	
+	# Notify scoreboard of game over
+	if scoreboard and scoreboard.has_method("game_over"):
+		scoreboard.game_over()
 	
 	# Stop spawning new capybaras immediately
 	if current_capy and not is_capy_dropping:
@@ -643,9 +654,8 @@ func finalize_capy_placement():
 		
 		calculate_stack_balance()
 		
-		var scoreboard = get_node("/root/Main/UI/Scoreboard")
-		if scoreboard:
-			scoreboard.add_score(1)
+	if scoreboard and scoreboard.has_method("_on_stack_added"):
+			scoreboard._on_stack_added()
 		
 func apply_progressive_foundation_stability():
 	var stack_height = capys_stack.size()

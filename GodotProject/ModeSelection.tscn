@@ -35,6 +35,7 @@ texture = ExtResource("1_iynnj")
 expand_mode = 3
 
 [node name="Logo" type="TextureRect" parent="."]
+layout_mode = 0
 offset_left = -1100.0
 offset_top = 21.0
 offset_right = 925.0
@@ -43,6 +44,7 @@ scale = Vector2(0.573986, 0.604417)
 texture = ExtResource("2_l782h")
 
 [node name="HeightChallengeButtonContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
 offset_left = -899.0
 offset_top = 1261.0
 offset_right = 721.0
@@ -56,6 +58,7 @@ size_flags_horizontal = 4
 texture_normal = ExtResource("3_yrymw")
 
 [node name="EndlessStackButtonContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
 offset_left = -905.0
 offset_top = 1483.0
 offset_right = 715.0
@@ -68,6 +71,7 @@ size_flags_horizontal = 4
 texture_normal = ExtResource("4_3e2kj")
 
 [node name="SettingsButtonContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
 offset_left = -217.0
 offset_top = 152.0
 offset_right = 1403.0

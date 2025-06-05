@@ -7,6 +7,9 @@ extends Control
 @onready var settings_button = $SettingsButtonContainer/SettingsButton
 @onready var title_label = $TitleLabel
 @onready var background = $Background
+@onready var landing_page_music = $LandingPageMusic
+@onready var button_sound = $ButtonSound
+@onready var mute: bool = false
 
 # Animation variables
 var height_pulse_tween: Tween
@@ -19,6 +22,7 @@ const LANDING_PAGE_SCENE = "res://LandingPage.tscn"
 const SETTINGS_SCENE = "res://SettingsScene.tscn"
 
 func _ready():
+	landing_page_music.play()
 	# Set this Control to fill the entire screen
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	
@@ -111,25 +115,29 @@ func _on_button_unhover():
 
 # Button action functions
 func _on_height_challenge_button_pressed():
-	play_button_sound()
+	button_sound.play()
 	start_game_transition(HEIGHT_CHALLENGE_SCENE)
 
 func _on_endless_stack_button_pressed():
-	play_button_sound()
+	button_sound.play()
 	start_game_transition(ENDLESS_STACK_SCENE)
 
 func _on_back_button_pressed():
-	play_button_sound()
+	button_sound.play()
 	go_back_to_landing()
 
 func _on_settings_button_pressed():
-	play_button_sound()
+	button_sound.play()
 	get_tree().change_scene_to_file(SETTINGS_SCENE)
 
 # Audio functions
+func play_music() -> void:
+	if not mute and landing_page_music:
+		landing_page_music.play()
+
 func play_button_sound():
-	# Add your audio logic here
-	pass
+	if not mute and landing_page_music:
+		button_sound.play()
 
 func play_hover_sound():
 	# Add your audio logic here

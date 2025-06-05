@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://SleepingCapySprite.png" type="Texture2D" id=1]
+
+[node name="RigidBody2D" type="RigidBody2D"]
+
+[node name="SleepingCapySprite" type="Sprite2D" parent="."]
+texture = ExtResource( 1 )
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+polygon = PackedVector2Array( 47, -54.9, 51.7, -51, 63.8, -51, 66.8, -48, 77, -48, 77, -45.9, 112, -15.9, 112, -13, 114.2, 10, 112, 10, 100, 25, 97.5, 25, 75.5, 36, 70.9, 36, 60.8, 45, -84.8, 45, -87.8, 42, -98, 42, -98, 39.9, -105, 33.9, -105, 29.3, -97, 18.7, -105, 9.8, -105, 3.8, -108, 0.800003, -108, -6.8, -105, -9.8, -105, -19, -110, -25.3, -110, -28.5, -108.2, -32, -106.8, -32, -102.8, -36, -97.8, -36, -86.9, -48, -81.8, -48, -78.8, -51, -54.8, -51, -51.8, -54, -39.6, -54, -38, -55.1, -38, -57.1, 37, -54.1, 47, -57.8 )

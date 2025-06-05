@@ -1,0 +1,74 @@
+[gd_scene load_steps=9 format=3 uid="uid://buu6w8pk80q3f"]
+
+[ext_resource type="Script" uid="uid://ccy7cd22fhbj3" path="res://Main.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://2qv47ukpm61l" path="res://UI.tscn" id="2_trn2v"]
+[ext_resource type="Script" uid="uid://dgtvbxi01c25g" path="res://InfiniteBackground.gd" id="2_uu6xs"]
+[ext_resource type="Texture2D" uid="uid://j1idf4u4p12k" path="res://GroundBackground.png" id="3_r0du0"]
+[ext_resource type="Texture2D" uid="uid://dmepu7sqwtai3" path="res://CloudBackground.png" id="4_cm0pq"]
+[ext_resource type="Texture2D" uid="uid://cplxdi4ddvbbw" path="res://SkyBackground.png" id="5_3dxm6"]
+[ext_resource type="Texture2D" uid="uid://b85ddhu3rhccw" path="res://SpaceBackground.png" id="6_lgr22"]
+[ext_resource type="Texture2D" uid="uid://cdrlxtr60m20v" path="res://DeepSpaceBackground.png" id="7_lgr22"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1")
+
+[node name="UI" parent="." instance=ExtResource("2_trn2v")]
+
+[node name="ParallaxBackground" type="ParallaxBackground" parent="."]
+script = ExtResource("2_uu6xs")
+
+[node name="ParallaxLayer" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_scale = Vector2(1, 0.8)
+
+[node name="TextureRect" type="TextureRect" parent="ParallaxBackground/ParallaxLayer"]
+offset_right = 40.0
+offset_bottom = 40.0
+scale = Vector2(0.672873, 0.624085)
+texture = ExtResource("3_r0du0")
+expand_mode = 1
+stretch_mode = 2
+
+[node name="ParallaxLayer2" type="ParallaxLayer" parent="ParallaxBackground"]
+position = Vector2(0, 8)
+scale = Vector2(0.981019, 0.683448)
+motion_scale = Vector2(1, 0.6)
+
+[node name="TextureRect" type="TextureRect" parent="ParallaxBackground/ParallaxLayer2"]
+offset_top = -2038.0
+offset_right = 1080.0
+offset_bottom = 10.0
+scale = Vector2(0.68368, 1.03575)
+texture = ExtResource("4_cm0pq")
+stretch_mode = 2
+
+[node name="ParallaxLayer3" type="ParallaxLayer" parent="ParallaxBackground"]
+
+[node name="TextureRect" type="TextureRect" parent="ParallaxBackground/ParallaxLayer3"]
+offset_top = -2593.0
+offset_right = 1080.0
+offset_bottom = -545.0
+scale = Vector2(0.670476, 0.615156)
+texture = ExtResource("5_3dxm6")
+
+[node name="ParallaxLayer4" type="ParallaxLayer" parent="ParallaxBackground"]
+
+[node name="TextureRect" type="TextureRect" parent="ParallaxBackground/ParallaxLayer4"]
+offset_left = -1.0
+offset_top = -3981.0
+offset_right = 1079.0
+offset_bottom = -1933.0
+scale = Vector2(0.685681, 0.676274)
+texture = ExtResource("6_lgr22")
+
+[node name="ParallaxLayer5" type="ParallaxLayer" parent="ParallaxBackground"]
+
+[node name="TextureRect" type="TextureRect" parent="ParallaxBackground/ParallaxLayer5"]
+offset_left = -2.0
+offset_top = -5301.0
+offset_right = 1078.0
+offset_bottom = -3253.0
+scale = Vector2(0.687167, 0.65878)
+texture = ExtResource("7_lgr22")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(357, 642)

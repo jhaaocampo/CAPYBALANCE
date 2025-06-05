@@ -1,9 +1,15 @@
-[gd_scene load_steps=5 format=3 uid="uid://buu6w8pk80q3f"]
+[gd_scene load_steps=11 format=3 uid="uid://buu6w8pk80q3f"]
 
 [ext_resource type="Script" uid="uid://ccy7cd22fhbj3" path="res://Main.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://2qv47ukpm61l" path="res://UI.tscn" id="2_trn2v"]
 [ext_resource type="Script" uid="uid://dgtvbxi01c25g" path="res://InfiniteBackground.gd" id="2_uu6xs"]
 [ext_resource type="Texture2D" uid="uid://bq4anywv7onew" path="res://Backgorunds.png" id="4_cm0pq"]
+[ext_resource type="AudioStream" uid="uid://egw0he3xks2p" path="res://Audio Asset/capybara landing (normal).mp3" id="5_3dxm6"]
+[ext_resource type="AudioStream" uid="uid://dpfon7sl77q6k" path="res://Audio Asset/bgm (endless).mp3" id="6_lgr22"]
+[ext_resource type="AudioStream" uid="uid://bid6ym10ebiix" path="res://Audio Asset/capybara landing (large).mp3" id="7_03owx"]
+[ext_resource type="AudioStream" uid="uid://cw5suq076l8qs" path="res://Audio Asset/capybara landing (baby).mp3" id="8_wkp8b"]
+[ext_resource type="AudioStream" uid="uid://bmiklqx2t4pjs" path="res://Audio Asset/capybara landing (sleepy).mp3" id="9_20pc6"]
+[ext_resource type="AudioStream" uid="uid://dllj25mpmb8rj" path="res://Audio Asset/capybara drop.mp3" id="10_wkp8b"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1")
@@ -30,3 +36,27 @@ texture = ExtResource("4_cm0pq")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(357, 642)
+
+[node name="EndlessPageMusic" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("6_lgr22")
+volume_db = -4.0
+
+[node name="DropSoundBase" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("5_3dxm6")
+volume_db = 24.0
+
+[node name="DropSoundLarge" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("7_03owx")
+volume_db = 24.0
+
+[node name="DropSoundBaby" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("8_wkp8b")
+volume_db = 24.0
+
+[node name="DropSoundSleeping" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("9_20pc6")
+volume_db = 24.0
+
+[node name="EnterDropSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("10_wkp8b")
+volume_db = 24.0

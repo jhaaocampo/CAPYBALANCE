@@ -24,6 +24,13 @@ extends Node2D
 @export var height_scaling_factor := 0.15  # How much each level adds to foundation stability
 @export var compression_strength := 40.0  # Base compression force for foundation
 @export var foundation_mass_scaling := 1.8
+@onready var mute: bool = false
+@onready var endless_page_music = $EndlessPageMusic
+@onready var drop_sound_base = $DropSoundBase
+@onready var drop_sound_baby = $DropSoundBaby
+@onready var drop_sound_large = $DropSoundLarge
+@onready var drop_sound_sleeping = $DropSoundSleeping
+@onready var enter_drop_sound = $EnterDropSound
 
 # References
 var current_capy = null
@@ -77,6 +84,31 @@ func _ready():
 	place_base_capy()
 	setup_initial_camera()
 	setup_scoreboard()
+	play_music()
+
+func play_music() -> void:
+	if not mute and endless_page_music:
+		endless_page_music.play()
+		
+func play_base_sound():
+	if not mute and drop_sound_base:
+		drop_sound_base.play()
+
+func play_baby_sound():
+	if not mute and drop_sound_baby:
+		drop_sound_baby.play()
+
+func play_large_sound():
+	if not mute and drop_sound_large:
+		drop_sound_large.play()
+
+func play_sleeping_sound():
+	if not mute and drop_sound_sleeping:
+		drop_sound_sleeping.play()
+
+func play_enter_drop_sound():
+	if not mute and enter_drop_sound:
+		enter_drop_sound.play()
 	
 func setup_scoreboard():
 	scoreboard = get_node_or_null("/root/Main/UI/Scoreboard")
@@ -595,7 +627,7 @@ func drop_current_capy():
 	if tipping_over:
 		print("Prevented drop during game over")
 		return
-		
+	play_enter_drop_sound()
 	is_capy_dropping = true
 	var capy_type_name = get_capy_type_name(current_capy)
 	var capy_data = capy_types[capy_type_name]
@@ -866,6 +898,18 @@ func finalize_capy_placement():
 		
 		# Add to stack
 		capys_stack.append(current_capy)
+		
+		# ADD SOUND EFFECT HERE - right after adding to stack
+		var capy_type = get_capy_type_name(current_capy)
+		match capy_type:
+			"BaseCapy":
+				play_base_sound()
+			"BabyCapy":
+				play_baby_sound()
+			"LargeCapy":
+				play_large_sound()
+			"SleepingCapy":
+				play_sleeping_sound()
 		
 		# Enhanced base stability
 		if capys_stack.size() == 1:

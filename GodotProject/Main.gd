@@ -159,19 +159,13 @@ func _process(delta):
 			spawn_capy()
 			spawn_timer = 0.0
 	
-	# Handle input and movement - prevent input during game over
 	if current_capy and not is_capy_dropping:
-		if Input.is_action_just_pressed("ui_accept"):
-			drop_current_capy()
-			return
-		
 		handle_horizontal_movement(delta)
-	
-	if capys_stack.size() > 1:
-		apply_stack_wobble(delta)
-		check_stack_stability(delta)
-		apply_height_based_global_stability(delta)
-
+		
+		if capys_stack.size() > 1:
+			apply_stack_wobble(delta)
+			check_stack_stability(delta)
+			apply_height_based_global_stability(delta)
 
 func check_for_fallen_capys():
 	if tipping_over:  # Already triggered, don't check again
@@ -1062,5 +1056,20 @@ func get_capy_type_name(capy_instance):
 	return "BaseCapy"
 
 func _input(event):
-	if event is InputEventKey and event.pressed and event.keycode == KEY_R:
-		get_tree().reload_current_scene()
+	if tipping_over:
+		return
+	
+	if current_capy and not is_capy_dropping:
+		# Handle screen touch
+		if event is InputEventScreenTouch and event.pressed:
+			if not is_tap_over_ui(event.position):
+				drop_current_capy()
+		
+		# Also handle keyboard/controller
+		if Input.is_action_pressed("ui_accept"):
+			drop_current_capy()
+			
+func is_tap_over_ui(position: Vector2) -> bool:
+	var viewport = get_viewport()
+	var ui_node = viewport.gui_pick(position)
+	return ui_node != null

@@ -18,38 +18,53 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_yrymw")
 
+[node name="GameModeText" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Label" type="Label" parent="GameModeText"]
+layout_mode = 0
+offset_left = 35.0
+offset_top = 618.0
+offset_right = 1025.0
+offset_bottom = 767.0
+scale = Vector2(0.651614, 0.651361)
+theme_override_colors/font_color = Color(1, 0.788235, 0.0823529, 1)
+theme_override_colors/font_shadow_color = Color(0.568973, 0.568973, 0.568973, 1)
+theme_override_fonts/font = ExtResource("8_3e2kj")
+theme_override_font_sizes/font_size = 90
+text = "SELECT MODE"
+
 [node name="Background" type="TextureRect" parent="."]
 z_index = -1
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -1197.0
-offset_top = -3.0
-offset_right = -940.0
-offset_bottom = 417.0
+offset_left = -6.0
+offset_right = 251.0
+offset_bottom = 420.0
 grow_horizontal = 2
 grow_vertical = 2
-scale = Vector2(1.00516, 0.994561)
+scale = Vector2(0.739095, 0.751704)
 texture = ExtResource("1_iynnj")
 expand_mode = 3
 
 [node name="Logo" type="TextureRect" parent="."]
-layout_mode = 0
-offset_left = -1100.0
-offset_top = 21.0
-offset_right = 925.0
-offset_bottom = 2046.0
-scale = Vector2(0.573986, 0.604417)
+offset_left = -5.0
+offset_top = 11.0
+offset_right = 2020.0
+offset_bottom = 2036.0
+scale = Vector2(0.355578, 0.334725)
 texture = ExtResource("2_l782h")
 
 [node name="HeightChallengeButtonContainer" type="VBoxContainer" parent="."]
-layout_mode = 0
-offset_left = -899.0
-offset_top = 1261.0
-offset_right = 721.0
-offset_bottom = 2881.0
-scale = Vector2(0.45806, 0.367463)
+offset_left = 139.0
+offset_top = 776.0
+offset_right = 1759.0
+offset_bottom = 2396.0
+scale = Vector2(0.264258, 0.205908)
 theme_override_constants/separation = 30
 
 [node name="HeightChallengeButton" type="TextureButton" parent="HeightChallengeButtonContainer"]
@@ -58,12 +73,11 @@ size_flags_horizontal = 4
 texture_normal = ExtResource("3_yrymw")
 
 [node name="EndlessStackButtonContainer" type="VBoxContainer" parent="."]
-layout_mode = 0
-offset_left = -905.0
-offset_top = 1483.0
-offset_right = 715.0
-offset_bottom = 2233.0
-scale = Vector2(0.470233, 0.374936)
+offset_left = 140.0
+offset_top = 895.0
+offset_right = 1760.0
+offset_bottom = 1645.0
+scale = Vector2(0.265543, 0.218205)
 
 [node name="EndlessStackButton" type="TextureButton" parent="EndlessStackButtonContainer"]
 layout_mode = 2
@@ -71,12 +85,11 @@ size_flags_horizontal = 4
 texture_normal = ExtResource("4_3e2kj")
 
 [node name="SettingsButtonContainer" type="VBoxContainer" parent="."]
-layout_mode = 0
-offset_left = -217.0
-offset_top = 152.0
-offset_right = 1403.0
-offset_bottom = 902.0
-scale = Vector2(0.173692, 0.170153)
+offset_left = 541.0
+offset_top = 92.0
+offset_right = 2161.0
+offset_bottom = 842.0
+scale = Vector2(0.090346, 0.0815194)
 
 [node name="SettingsButton" type="TextureButton" parent="SettingsButtonContainer"]
 layout_mode = 2
@@ -84,29 +97,12 @@ texture_normal = ExtResource("5_xdvy6")
 
 [node name="BackButtonContainer" type="VBoxContainer" parent="."]
 layout_mode = 0
-offset_left = -1004.0
-offset_top = 161.0
-offset_right = 616.0
-offset_bottom = 911.0
-scale = Vector2(0.156244, 0.139612)
+offset_left = 41.0
+offset_top = 94.0
+offset_right = 1661.0
+offset_bottom = 844.0
+scale = Vector2(0.078019, 0.0724462)
 
 [node name="BackButton" type="TextureButton" parent="BackButtonContainer"]
 layout_mode = 2
 texture_normal = ExtResource("6_l782h")
-
-[node name="GameModeText" type="Control" parent="."]
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="Label" type="Label" parent="GameModeText"]
-layout_mode = 0
-offset_left = -1011.0
-offset_top = 1118.0
-offset_right = -21.0
-offset_bottom = 1267.0
-theme_override_colors/font_color = Color(1, 0.788235, 0.0823529, 1)
-theme_override_colors/font_shadow_color = Color(0.568973, 0.568973, 0.568973, 1)
-theme_override_fonts/font = ExtResource("8_3e2kj")
-theme_override_font_sizes/font_size = 90
-text = "SELECT MODE"

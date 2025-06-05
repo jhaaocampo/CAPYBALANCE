@@ -22,32 +22,29 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -1197.0
-offset_top = -3.0
-offset_right = -940.0
-offset_bottom = 417.0
+offset_left = -6.0
+offset_right = 251.0
+offset_bottom = 420.0
 grow_horizontal = 2
 grow_vertical = 2
-scale = Vector2(1.00516, 0.994561)
+scale = Vector2(0.739095, 0.751704)
 texture = ExtResource("1_fe6hs")
 expand_mode = 3
 
 [node name="Logo" type="TextureRect" parent="."]
-layout_mode = 0
-offset_left = -1100.0
-offset_top = 21.0
-offset_right = 925.0
-offset_bottom = 2046.0
-scale = Vector2(0.573986, 0.604417)
+offset_left = -5.0
+offset_top = 11.0
+offset_right = 2020.0
+offset_bottom = 2036.0
+scale = Vector2(0.355578, 0.334725)
 texture = ExtResource("2_ur3vi")
 
 [node name="StartButtonContainer" type="VBoxContainer" parent="."]
-layout_mode = 0
-offset_left = -899.0
-offset_top = 1261.0
-offset_right = 721.0
-offset_bottom = 2881.0
-scale = Vector2(0.45806, 0.367463)
+offset_left = 140.0
+offset_top = 709.0
+offset_right = 1760.0
+offset_bottom = 2329.0
+scale = Vector2(0.264258, 0.205908)
 theme_override_constants/separation = 30
 
 [node name="StartButton" type="TextureButton" parent="StartButtonContainer"]
@@ -56,12 +53,11 @@ size_flags_horizontal = 4
 texture_normal = ExtResource("3_ar278")
 
 [node name="LeaveButtonContainer" type="VBoxContainer" parent="."]
-layout_mode = 0
-offset_left = -770.0
-offset_top = 1587.0
-offset_right = 850.0
-offset_bottom = 2337.0
-scale = Vector2(0.308383, 0.304151)
+offset_left = 204.0
+offset_top = 905.0
+offset_right = 1824.0
+offset_bottom = 1655.0
+scale = Vector2(0.17168, 0.147613)
 
 [node name="LeaveButton" type="TextureButton" parent="LeaveButtonContainer"]
 layout_mode = 2
@@ -69,12 +65,11 @@ size_flags_horizontal = 4
 texture_normal = ExtResource("4_l42u6")
 
 [node name="SettingsButtonContainer" type="VBoxContainer" parent="."]
-layout_mode = 0
-offset_left = -217.0
-offset_top = 152.0
-offset_right = 1403.0
-offset_bottom = 902.0
-scale = Vector2(0.173692, 0.170153)
+offset_left = 541.0
+offset_top = 92.0
+offset_right = 2161.0
+offset_bottom = 842.0
+scale = Vector2(0.090346, 0.0815194)
 
 [node name="SettingsButton" type="TextureButton" parent="SettingsButtonContainer"]
 layout_mode = 2

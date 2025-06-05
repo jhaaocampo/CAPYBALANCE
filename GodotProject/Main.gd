@@ -141,18 +141,22 @@ func _process(delta):
 			get_tree().reload_current_scene()
 		return  # Don't process anything else during game over
 	
-	# Check for fallen capybaras
+	# Check for fallen capybaras FIRST - before any other logic
 	check_for_fallen_capys()
 	
-	# FIXED: Only spawn if not tipping over
-	if current_capy == null and not is_capy_dropping and not tipping_over:
+	# Exit early if game over was triggered
+	if tipping_over:
+		return
+	
+	# Only spawn if not tipping over and no current capy
+	if current_capy == null and not is_capy_dropping:
 		spawn_timer += delta
 		if spawn_timer >= spawn_delay:
 			spawn_capy()
 			spawn_timer = 0.0
 	
-	# Handle input and movement - FIXED: prevent input during game over
-	if current_capy and not is_capy_dropping and not tipping_over:
+	# Handle input and movement - prevent input during game over
+	if current_capy and not is_capy_dropping:
 		if Input.is_action_just_pressed("ui_accept"):
 			drop_current_capy()
 			return
@@ -162,21 +166,44 @@ func _process(delta):
 	if capys_stack.size() > 1:
 		apply_stack_wobble(delta)
 		check_stack_stability(delta)
-		# Add the new global stability system
 		apply_height_based_global_stability(delta)
 
 func check_for_fallen_capys():
+	if tipping_over:  # Already triggered, don't check again
+		return
+		
 	if capys_stack.size() <= 1:  # Only base capy or empty
 		return
 		
-	# Check all capybaras except the base (index 0)
-	for i in range(1, capys_stack.size()):
+	# Check all capybaras for various failure conditions
+	for i in range(capys_stack.size()):
 		var capy = capys_stack[i]
 		if not is_instance_valid(capy):
 			continue
+		
+		var rb = find_rigidbody(capy)
+		if not rb:
+			continue
 			
-		# If any non-base capy hits the ground, game over
-		if capy.position.y >= ground_level - capy_height * 0.3:
+		# Check if any capy (including base) has fallen to ground level
+		if capy.position.y >= ground_level - capy_height * 0.2:
+			print("Game Over: Capybara hit ground at position ", capy.position.y, " (ground: ", ground_level, ")")
+			trigger_game_over()
+			return
+			
+		# Check for extreme horizontal displacement from stack center
+		var base_x = capys_stack[0].position.x if capys_stack.size() > 0 else start_x_position
+		var horizontal_distance = abs(capy.position.x - base_x)
+		var max_allowed_distance = capy_height * 3.0  # Reasonable horizontal limit
+		
+		if horizontal_distance > max_allowed_distance:
+			print("Game Over: Capybara displaced too far horizontally: ", horizontal_distance)
+			trigger_game_over()
+			return
+			
+		# Check for extreme velocities (capybara flying off)
+		if rb.linear_velocity.length() > 800:  # Very high velocity
+			print("Game Over: Capybara moving too fast: ", rb.linear_velocity.length())
 			trigger_game_over()
 			return
 
@@ -224,13 +251,12 @@ func trigger_game_over():
 	if scoreboard and scoreboard.has_method("game_over"):
 		scoreboard.game_over()
 	
-	# Stop spawning new capybaras immediately
-	if current_capy and not is_capy_dropping:
-		# Remove the current moving capybara
+	# IMMEDIATELY stop spawning and remove current capy
+	if current_capy:
 		current_capy.queue_free()
 		current_capy = null
 	
-	# Stop any ongoing spawning
+	# Reset all spawning variables
 	spawn_timer = 0.0
 	is_capy_dropping = false
 	
@@ -285,29 +311,37 @@ func check_stack_stability(delta):
 		return
 	
 	var imbalance = abs(stack_balance_factor)
-	# ENHANCED: Much more forgiving threshold that scales significantly with stack height
-	var base_threshold = 0.8  # Increased from 0.6
-	var height_bonus = min(capys_stack.size() * 0.12, 0.6)  # Increased bonus
-	var foundation_bonus = min(capys_stack.size() * 0.05, 0.3)  # New foundation bonus
+	# Enhanced threshold calculation
+	var base_threshold = 0.8
+	var height_bonus = min(capys_stack.size() * 0.12, 0.6)
+	var foundation_bonus = min(capys_stack.size() * 0.05, 0.3)
 	var stability_threshold = base_threshold + height_bonus + foundation_bonus
 	
-	# ENHANCED: Much more lenient movement thresholds
+	# Check for rapid movement
 	var top_capy = capys_stack.back()
 	var rb = find_rigidbody(top_capy)
 	var rapid_movement = false
 	if rb:
-		var velocity_threshold = 500 + min(capys_stack.size() * 40, 300)  # Much higher threshold
-		var angular_threshold = 12.0 + min(capys_stack.size() * 0.8, 8.0)  # Higher threshold
+		var velocity_threshold = 500 + min(capys_stack.size() * 40, 300)
+		var angular_threshold = 12.0 + min(capys_stack.size() * 0.8, 8.0)
 		rapid_movement = rb.linear_velocity.length() > velocity_threshold or abs(rb.angular_velocity) > angular_threshold
+	
+	# Additional check: if any capybara is moving extremely fast, trigger immediately
+	for capy in capys_stack:
+		var capy_rb = find_rigidbody(capy)
+		if capy_rb and capy_rb.linear_velocity.length() > 1000:  # Emergency threshold
+			print("Game Over: Emergency velocity threshold exceeded")
+			trigger_game_over()
+			return
 	
 	if imbalance > stability_threshold or rapid_movement:
 		imbalance_duration += delta
-		# ENHANCED: Much longer grace period for taller stacks
-		var grace_period = 4.0 + min(capys_stack.size() * 0.8, 6.0)  # 4.0-10.0 seconds
+		var grace_period = 4.0 + min(capys_stack.size() * 0.8, 6.0)
 		if imbalance_duration > grace_period:
+			print("Game Over: Stack stability threshold exceeded after grace period")
 			destabilize_stack()
 	else:
-		imbalance_duration = max(0, imbalance_duration - delta * 3.0)  # Much faster recovery
+		imbalance_duration = max(0, imbalance_duration - delta * 3.0)
 
 func check_if_stack_settled(capy_index):
 	if capys_stack.size() <= 1:
@@ -373,8 +407,9 @@ func calculate_stack_balance():
 	stack_height = capys_stack.size()
 
 func drop_current_capy():
-	# FIXED: Prevent dropping during game over
+	# Prevent dropping during game over
 	if tipping_over:
+		print("Prevented drop during game over")
 		return
 		
 	is_capy_dropping = true
@@ -390,7 +425,7 @@ func drop_current_capy():
 		
 		# Gentler drop for first few capys
 		if capys_stack.size() <= 2:
-			base_velocity *= 0.6  # Reduce velocity by 40%
+			base_velocity *= 0.6
 		
 		rb.linear_velocity = Vector2(0, base_velocity)
 
@@ -519,6 +554,10 @@ func find_rigidbody(node):
 	return null
 
 func _physics_process(delta):
+	# CRITICAL: Exit early if game over
+	if tipping_over:
+		return
+		
 	if current_capy and is_capy_dropping:
 		var rb = find_rigidbody(current_capy)
 		if not rb:
@@ -538,7 +577,6 @@ func _physics_process(delta):
 	if capys_stack.size() > 5:
 		reinforce_foundation_continuously(delta)
 		
-	# NEW: Apply foundation anchoring for very tall stacks
 	if capys_stack.size() > 6:
 		apply_foundation_anchoring(delta)
 
@@ -626,6 +664,14 @@ func is_near_stack(capy):
 	return (capy.position - top_capy.position).length() < capy_height * 1.5
 
 func finalize_capy_placement():
+	# CRITICAL: Check for game over before finalizing
+	if tipping_over:
+		if current_capy:
+			current_capy.queue_free()
+			current_capy = null
+		is_capy_dropping = false
+		return
+		
 	if current_capy:
 		var rb = find_rigidbody(current_capy)
 		if rb:
@@ -654,7 +700,7 @@ func finalize_capy_placement():
 		
 		calculate_stack_balance()
 		
-	if scoreboard and scoreboard.has_method("_on_stack_added"):
+		if scoreboard and scoreboard.has_method("_on_stack_added"):
 			scoreboard._on_stack_added()
 		
 func apply_progressive_foundation_stability():
@@ -809,8 +855,9 @@ func apply_weight_compression(delta):
 				rb.apply_impulse(Vector2.ZERO, Vector2(0, compression_force))
 
 func spawn_capy():
-	# FIXED: Add tipping_over check
+	# CRITICAL: Multiple checks to prevent spawning during game over
 	if current_capy != null or is_capy_dropping or tipping_over:
+		print("Spawn prevented - current_capy: ", current_capy, " is_dropping: ", is_capy_dropping, " tipping: ", tipping_over)
 		return
 	
 	var capy_type_name = get_capy_type_to_spawn()
@@ -834,6 +881,7 @@ func spawn_capy():
 		rb.linear_velocity = Vector2(move_speed * (1 if moving_right else -1), 0)
 	
 	current_capy = capy_instance
+	print("Spawned new capy: ", capy_type_name)
 
 func calculate_stack_weight_above(index):
 	var weight = 0.0

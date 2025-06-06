@@ -7,22 +7,11 @@ extends Node2D
 @export var spawn_delay := 0.6
 @export var ground_margin := 130.0
 @export var move_speed := 100.0
-@export var start_height := 300.0
 @export var max_horizontal_movement := 100.0
-# Balance physics settings
-@export var wobble_factor := 1.5
-@export var center_sticky_range := 10.0
-@export var max_sticky_force := 30.0
-@export var balance_threshold := 0.25
-@export var auto_center_force := 1.0
-@export var wobble_frequency := 0.4
-@export var wobble_amplitude := 1.5
-@export var stack_elasticity := 0.35
-@export var edge_penalty := 2.0
 @export var base_capy_count_threshold := 3
-@export var foundation_stability_multiplier := 2.5  # How much more stable the foundation becomes
-@export var height_scaling_factor := 0.15  # How much each level adds to foundation stability
-@export var compression_strength := 40.0  # Base compression force for foundation
+@export var foundation_stability_multiplier := 2.5
+@export var height_scaling_factor := 0.15
+@export var compression_strength := 40.0
 @export var foundation_mass_scaling := 1.8
 @onready var mute: bool = false
 @onready var endless_page_music = $EndlessPageMusic
@@ -70,7 +59,7 @@ var capy_types := {
 	"SleepingCapy": {"height": 65.0, "mass": 1.2, "gravity_scale": 2.0}
 }
 
-const GAME_OVER_SCENE = "res://GameOver.tscn"  # Path to your game over scene
+const GAME_OVER_SCENE = "res://GameOver.tscn"
 var game_over_scene_instance = null
 
 func _ready():
@@ -78,7 +67,6 @@ func _ready():
 	ground_level = get_viewport_rect().size.y - ground_margin
 	start_x_position = get_viewport_rect().size.x / 2
 	
-	# Set up touch input action if it doesn't exist
 	setup_touch_input()
 	
 	create_ground()
@@ -156,7 +144,6 @@ func is_contacting_something(rb):
 		if find_capy_owner(contact_body) in capys_stack:
 			return true
 	
-	# More precise ground proximity check
 	var capy_bottom = rb.global_position.y + (capy_height * 0.4)
 	return capy_bottom >= ground_level - 5.0  # Small tolerance for ground contact
 
@@ -169,7 +156,7 @@ func find_capy_owner(body):
 	return null
 
 func get_spawn_height():
-	var consistent_drop_distance = capy_height * 8.0  # Increased from 4.0 to 8.0
+	var consistent_drop_distance = capy_height * 8.0
 	
 	if capys_stack.size() > 0:
 		var top_capy = capys_stack.back()
@@ -272,7 +259,6 @@ func check_for_fallen_capys():
 				trigger_game_over()
 				return
 		
-		# NEW: Check if any capy is touching capys it shouldn't be touching
 		# Each capy should only touch the one directly below it (and above it if it exists)
 		var colliding_bodies = rb.get_colliding_bodies()
 		for body in colliding_bodies:
@@ -711,8 +697,7 @@ func update_camera(delta):
 		# Smooth camera movement to show collapse
 		camera.position = camera.position.lerp(target_camera_position, delta * camera_speed * 3)
 		return
-	
-	# Rest of the normal camera logic remains the same...
+
 	# Handle base capy dropping
 	if capys_stack.size() == 0 and current_capy and is_capy_dropping:
 		target_camera_position = Vector2(viewport_width / 2, current_capy.position.y - (viewport_height * 0.3))
@@ -803,7 +788,6 @@ func _physics_process(delta):
 	if capys_stack.size() > 6:
 		apply_foundation_anchoring(delta)
 
-# ENHANCED: Create much stronger ground anchor for base capy
 func create_ground_anchor(capy):
 	var rb = find_rigidbody(capy)
 	if rb:
@@ -853,7 +837,6 @@ func reinforce_foundation_continuously(delta):
 				var max_mass_multiplier = 1.0 + stack_height * 0.3  # Scales with total height
 				rb.mass = min(rb.mass + mass_growth_rate, rb.mass * max_mass_multiplier)
 
-# Add this new function for additional stability at higher stacks
 func apply_height_based_global_stability(delta):
 	var stack_height = capys_stack.size()
 	if stack_height < 5:
@@ -1195,7 +1178,6 @@ func get_capy_type_name(capy_instance):
 		if scene_path.ends_with(type_name + ".tscn"):
 			return type_name
 	return "BaseCapy"
-
 
 func _input(event):
 	# Handle restart key

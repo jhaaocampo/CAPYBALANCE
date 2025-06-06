@@ -10,6 +10,11 @@ extends Control
 @onready var replay_button = $ReplayButtonContainer/ReplayButton
 @onready var leave_button = $LeaveButtonContainer/LeaveButton
 @onready var background = $Background
+@onready var high_score_sound = $HighScoreSound
+@onready var leaving_sound = $LeavingSound
+@onready var button_sound = $ButtonSound
+
+@onready var mute: bool = false
 
 # Animation variables
 var replay_pulse_tween: Tween
@@ -67,6 +72,18 @@ func _ready():
 	
 	# Hide background UI elements
 	hide_background_ui()
+
+func play_high_score_sound():
+	if not mute and high_score_sound:
+		high_score_sound.play()
+		
+func play_leaving_sound():
+	if not mute and leaving_sound:
+		leaving_sound.play()
+		
+func play_button_sound():
+	if not mute and button_sound:
+		button_sound.play()
 
 func validate_nodes() -> bool:
 	# Check if all critical nodes exist
@@ -191,6 +208,7 @@ func setup_display():
 		# Add "NEW RECORD!" text or effect
 		game_over_label.text = "NEW RECORD!"
 		game_over_label.modulate = Color.GOLD
+		play_high_score_sound()
 
 # Animation functions
 func start_replay_pulse_animation():
@@ -247,7 +265,7 @@ func animate_entrance():
 func animate_new_record():
 	if not highest_stack_score:
 		return
-		
+	play_high_score_sound()
 	# Special animation for new record
 	var record_tween = create_tween()
 	record_tween.set_loops(3)
@@ -301,11 +319,13 @@ func _on_button_unhover():
 	pass
 
 # Button action functions
-func _on_replay_button_pressed():
+func _on_replay_button_pressed():  
 	play_button_sound()
 	replay_game()
+	
 
 func _on_leave_button_pressed():
+	play_leaving_sound()
 	if volume_enabled:
 		play_button_sound()
 	show_quit_confirmation()
@@ -363,9 +383,6 @@ func setup_as_overlay():
 		background.modulate = Color(0, 0, 0, 0.8)  # Semi-transparent black overlay
 
 # Audio functions
-func play_button_sound():
-	# Add your audio logic here
-	pass
 
 func play_hover_sound():
 	# Add your audio logic here

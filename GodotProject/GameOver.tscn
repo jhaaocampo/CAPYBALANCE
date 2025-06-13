@@ -7,8 +7,8 @@
 [ext_resource type="Texture2D" uid="uid://d3wot3t2r31c7" path="res://Gameover box.png" id="4_758bs"]
 [ext_resource type="Texture2D" uid="uid://dk5ssdj0jlq7m" path="res://Replay button.png" id="5_rr04i"]
 [ext_resource type="Texture2D" uid="uid://vxtgskqapp4e" path="res://leave button.png" id="6_067b4"]
-[ext_resource type="AudioStream" uid="uid://ce553jon61jww" path="res://Audio Asset/done (height challenge).mp3" id="8_3fonj"]
-[ext_resource type="AudioStream" uid="uid://dhpp67tyc6npq" path="res://Audio Asset/click button.mp3" id="10_rr04i"]
+[ext_resource type="AudioStream" uid="uid://bm2h0jeijxrf1" path="res://Audio Asset/done (height challenge).mp3" id="8_3fonj"]
+[ext_resource type="AudioStream" uid="uid://db7c54twm53kb" path="res://Audio Asset/click button.mp3" id="10_rr04i"]
 
 [node name="GameOver" type="Control"]
 layout_mode = 3

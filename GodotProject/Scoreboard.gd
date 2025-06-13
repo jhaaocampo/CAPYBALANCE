@@ -377,5 +377,12 @@ func pause_game():
 	if volume_enabled:
 		play_ui_sound()
 	
-	# Change this to a proper pause menu scene later
-	get_tree().change_scene_to_file("res://PauseMenu.tscn")
+	# Load and instantiate the PauseMenu scene as an overlay
+	var pause_scene = preload("res://PauseMenu.tscn")
+	var pause_instance = pause_scene.instantiate()
+	
+	# Setup the overlay to appear on top
+	pause_instance.setup_as_overlay()
+	
+	# Add it to the scene tree
+	get_tree().current_scene.add_child(pause_instance)

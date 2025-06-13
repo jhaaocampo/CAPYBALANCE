@@ -1,6 +1,7 @@
-[gd_scene load_steps=7 format=3 uid="uid://cys1dytwniotr"]
+[gd_scene load_steps=8 format=3 uid="uid://cys1dytwniotr"]
 
 [ext_resource type="Texture2D" uid="uid://d3wot3t2r31c7" path="res://Gameover box.png" id="1_q775a"]
+[ext_resource type="Script" uid="uid://xpf5rd1lfug1" path="res://PauseMenu.gd" id="1_sev4g"]
 [ext_resource type="Texture2D" uid="uid://b6fo7gwufy1f8" path="res://ReTRY button.png" id="2_qg8xq"]
 [ext_resource type="Texture2D" uid="uid://cihfd8shjguad" path="res://mENU button.png" id="3_36k83"]
 [ext_resource type="Texture2D" uid="uid://cqttxrpsyq8hm" path="res://X button.png" id="4_qg8xq"]
@@ -14,6 +15,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_sev4g")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 process_mode = 2

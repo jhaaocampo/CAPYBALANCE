@@ -1,3 +1,5 @@
+# GameOver.gd
+
 extends Control
 
 # UI References - Updated to match scene tree

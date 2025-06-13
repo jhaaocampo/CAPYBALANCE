@@ -8,8 +8,8 @@
 [ext_resource type="Texture2D" uid="uid://bohxlb1va11bs" path="res://settings button.png" id="5_xdvy6"]
 [ext_resource type="Texture2D" uid="uid://cmlftdl7w58pn" path="res://back button.png" id="6_l782h"]
 [ext_resource type="FontFile" uid="uid://dv6rxjsqf5lyn" path="res://PressStart2P.ttf" id="8_3e2kj"]
-[ext_resource type="AudioStream" uid="uid://d4jos21twnur" path="res://Audio Asset/starting menu screen.mp3" id="9_uc2ct"]
-[ext_resource type="AudioStream" uid="uid://mlwoo1r8hisq" path="res://Audio Asset/click button.mp3" id="10_a3mbt"]
+[ext_resource type="AudioStream" uid="uid://b70jpeuxi03w" path="res://Audio Asset/starting menu screen.mp3" id="9_uc2ct"]
+[ext_resource type="AudioStream" uid="uid://dhpp67tyc6npq" path="res://Audio Asset/click button.mp3" id="10_a3mbt"]
 
 [node name="ModeSelection" type="Control"]
 layout_mode = 3

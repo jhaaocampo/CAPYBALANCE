@@ -1,0 +1,93 @@
+[gd_scene load_steps=5 format=3 uid="uid://cxi5olo77me7a"]
+
+[ext_resource type="Texture2D" uid="uid://d3wot3t2r31c7" path="res://Gameover box.png" id="1_xdtwo"]
+[ext_resource type="FontFile" uid="uid://dv6rxjsqf5lyn" path="res://PressStart2P.ttf" id="2_tfw3m"]
+[ext_resource type="Texture2D" uid="uid://cmrv0ebpbccof" path="res://Yes button.png" id="3_6eur0"]
+[ext_resource type="Texture2D" uid="uid://b165tqbq1eo51" path="res://No button.png" id="4_5bggv"]
+
+[node name="LeaveScene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="GameoverBox" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = -300.0
+offset_top = 582.0
+offset_right = 1455.0
+offset_bottom = 1395.0
+scale = Vector2(0.754051, 0.513953)
+texture = ExtResource("1_xdtwo")
+
+[node name="OhNoText" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 3.0
+offset_top = -3.0
+offset_right = 43.0
+offset_bottom = 37.0
+
+[node name="OhNo" type="Label" parent="OhNoText"]
+layout_mode = 0
+offset_left = 95.0
+offset_top = 464.0
+offset_right = 1085.0
+offset_bottom = 613.0
+scale = Vector2(0.651614, 0.651361)
+theme_override_colors/font_color = Color(1, 0.788235, 0.0823529, 1)
+theme_override_colors/font_shadow_color = Color(0.568973, 0.568973, 0.568973, 1)
+theme_override_fonts/font = ExtResource("2_tfw3m")
+theme_override_font_sizes/font_size = 90
+text = "OH NO! :("
+
+[node name="AreYouSureText" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_top = 182.0
+offset_right = 40.0
+offset_bottom = 222.0
+
+[node name="AreYouSure" type="Label" parent="AreYouSureText"]
+layout_mode = 0
+offset_left = 54.0
+offset_top = 470.0
+offset_right = 1044.0
+offset_bottom = 619.0
+scale = Vector2(0.651614, 0.651361)
+theme_override_colors/font_color = Color(0.403922, 0.231373, 0.027451, 1)
+theme_override_constants/line_spacing = 25
+theme_override_fonts/font = ExtResource("2_tfw3m")
+theme_override_font_sizes/font_size = 45
+text = "Are you sure you 
+want to quit?"
+horizontal_alignment = 1
+
+[node name="YesButtonContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 230.0
+offset_top = 789.0
+offset_right = 1985.0
+offset_bottom = 2409.0
+scale = Vector2(0.139891, 0.11173)
+theme_override_constants/separation = 30
+
+[node name="YesButton" type="TextureButton" parent="YesButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+texture_normal = ExtResource("3_6eur0")
+
+[node name="NoButtonContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 285.0
+offset_top = 883.0
+offset_right = 2040.0
+offset_bottom = 1696.0
+scale = Vector2(0.0836657, 0.0803381)
+
+[node name="NoButton" type="TextureButton" parent="NoButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+texture_normal = ExtResource("4_5bggv")

@@ -378,4 +378,4 @@ func pause_game():
 		play_ui_sound()
 	
 	# Change this to a proper pause menu scene later
-	get_tree().change_scene_to_file("res://GameOver.tscn")
+	get_tree().change_scene_to_file("res://PauseMenu.tscn")

@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://vemh6wr0oru1"]
+[gd_scene load_steps=10 format=3 uid="uid://vemh6wr0oru1"]
 
 [ext_resource type="FontFile" uid="uid://dv6rxjsqf5lyn" path="res://PressStart2P.ttf" id="1_3y56u"]
 [ext_resource type="Script" uid="uid://byf2mmmx6gj02" path="res://GameOver.gd" id="1_ua7od"]
@@ -7,9 +7,8 @@
 [ext_resource type="Texture2D" uid="uid://d3wot3t2r31c7" path="res://Gameover box.png" id="4_758bs"]
 [ext_resource type="Texture2D" uid="uid://dk5ssdj0jlq7m" path="res://Replay button.png" id="5_rr04i"]
 [ext_resource type="Texture2D" uid="uid://vxtgskqapp4e" path="res://leave button.png" id="6_067b4"]
-[ext_resource type="AudioStream" uid="uid://bwexd8whrplqe" path="res://Audio Asset/done (height challenge).mp3" id="8_3fonj"]
-[ext_resource type="AudioStream" uid="uid://df6i8680080tc" path="res://Audio Asset/LeavingSound.WAV" id="9_758bs"]
-[ext_resource type="AudioStream" uid="uid://dntax01ecuh6i" path="res://Audio Asset/click button.mp3" id="10_rr04i"]
+[ext_resource type="AudioStream" uid="uid://ce553jon61jww" path="res://Audio Asset/done (height challenge).mp3" id="8_3fonj"]
+[ext_resource type="AudioStream" uid="uid://dhpp67tyc6npq" path="res://Audio Asset/click button.mp3" id="10_rr04i"]
 
 [node name="GameOver" type="Control"]
 layout_mode = 3
@@ -153,7 +152,6 @@ text = "0"
 stream = ExtResource("8_3fonj")
 
 [node name="LeavingSound" type="AudioStreamPlayer2D" parent="."]
-stream = ExtResource("9_758bs")
 
 [node name="ButtonSound" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("10_rr04i")

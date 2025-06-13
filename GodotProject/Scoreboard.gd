@@ -4,7 +4,8 @@ extends Control
 @onready var score_label: Label = $Stacks
 @onready var high_score_label: Label = $HighScore
 @onready var timer_label: Label = $Timer
-@onready var volume_button: TextureButton = $VolumeButton  # Add this line
+@onready var volume_button: TextureButton = $VolumeButtonContainer/VolumeButton
+@onready var pause_button: TextureButton = $PauseButtonContainer/PauseButton
 
 # Volume state
 var volume_enabled: bool = true
@@ -30,6 +31,7 @@ func _ready():
 	load_high_scores()
 	load_volume_setting()  # Load volume setting
 	setup_volume_button()  # Setup volume button
+	setup_pause_button()
 	update_display()
 	connect_to_game_signals()
 
@@ -359,3 +361,21 @@ func _on_capy_added():
 # Public method to get volume state (useful for other scripts)
 func is_volume_enabled() -> bool:
 	return volume_enabled
+	
+func setup_pause_button():
+	if pause_button:
+		pause_button.pressed.connect(_on_pause_button_pressed)
+
+func _on_pause_button_pressed():
+	pause_game()
+
+func pause_game():
+	# Pause the game
+	get_tree().paused = true
+	
+	# Play UI sound if volume is enabled
+	if volume_enabled:
+		play_ui_sound()
+	
+	# Change this to a proper pause menu scene later
+	get_tree().change_scene_to_file("res://GameOver.tscn")

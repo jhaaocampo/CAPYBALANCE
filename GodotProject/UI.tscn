@@ -57,10 +57,24 @@ text = "Time
 00:00.00"
 horizontal_alignment = 2
 
+[node name="PauseButtonContainer" type="VBoxContainer" parent="Scoreboard"]
+layout_mode = 2
+offset_left = 595.0
+offset_top = 94.0
+offset_right = 2350.0
+offset_bottom = 907.0
+scale = Vector2(0.065453, 0.0665404)
+
+[node name="PauseButton" type="TextureButton" parent="Scoreboard/PauseButtonContainer"]
+layout_mode = 2
+toggle_mode = true
+texture_normal = ExtResource("3_qui0h")
+
 [node name="VolumeButtonContainer" type="VBoxContainer" parent="Scoreboard"]
-offset_left = 583.0
+layout_mode = 0
+offset_left = 33.0
 offset_top = 92.0
-offset_right = 2338.0
+offset_right = 1788.0
 offset_bottom = 905.0
 scale = Vector2(0.067116, 0.0603714)
 

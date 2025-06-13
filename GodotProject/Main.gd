@@ -21,6 +21,8 @@ extends Node2D
 @onready var drop_sound_sleeping = $DropSoundSleeping
 @onready var enter_drop_sound = $EnterDropSound
 @onready var game_over_sound = $GameOverSound
+@export var ui_exclusion_zone_height := 220.0
+
 
 # References
 var current_capy = null
@@ -211,10 +213,7 @@ func setup_touch_input():
 		var touch_event = InputEventScreenTouch.new()
 		InputMap.action_add_event("touch_drop", touch_event)
 		
-		# Also add mouse click for desktop testing
-		var mouse_event = InputEventMouseButton.new()
-		mouse_event.button_index = MOUSE_BUTTON_LEFT
-		InputMap.action_add_event("touch_drop", mouse_event)
+		# Note: We handle mouse separately now to apply UI exclusion zone
 		
 func cleanup_game_over():
 	if game_over_scene_instance:
@@ -1185,13 +1184,25 @@ func _input(event):
 		get_tree().reload_current_scene()
 		return
 	
-	# Handle touch input for mobile devices
+	# Handle touch input for mobile devices - with UI exclusion zone
 	if event is InputEventScreenTouch:
 		if event.pressed and current_capy and not is_capy_dropping and not tipping_over:
-			drop_current_capy()
+			# Check if touch is in the UI exclusion zone (top part of screen)
+			var screen_size = get_viewport_rect().size
+			var touch_y = event.position.y
+			
+			# Only allow capybara dropping if touch is below the UI zone
+			if touch_y > ui_exclusion_zone_height:
+				drop_current_capy()
 	
 	# Handle mouse clicks for desktop (optional - for testing on desktop)
 	elif event is InputEventMouseButton:
 		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			if current_capy and not is_capy_dropping and not tipping_over:
-				drop_current_capy()
+				# Apply same UI exclusion zone for mouse clicks
+				var screen_size = get_viewport_rect().size
+				var click_y = event.position.y
+				
+				# Only allow capybara dropping if click is below the UI zone
+				if click_y > ui_exclusion_zone_height:
+					drop_current_capy()

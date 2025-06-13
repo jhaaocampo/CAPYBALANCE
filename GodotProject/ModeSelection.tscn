@@ -1,15 +1,14 @@
-[gd_scene load_steps=11 format=3 uid="uid://b3g6xpu7pchk7"]
+[gd_scene load_steps=10 format=3 uid="uid://b3g6xpu7pchk7"]
 
 [ext_resource type="Texture2D" uid="uid://bc3yiesalklmd" path="res://Background.png" id="1_iynnj"]
 [ext_resource type="Script" uid="uid://coo7mpsvcjqha" path="res://ModeSelection.gd" id="1_yrymw"]
 [ext_resource type="Texture2D" uid="uid://k0dctlkvytgf" path="res://capybalancelogo.png" id="2_l782h"]
 [ext_resource type="Texture2D" uid="uid://brldpkw2rdwkh" path="res://height challenge button.png" id="3_yrymw"]
 [ext_resource type="Texture2D" uid="uid://lit1l4qsorqj" path="res://endless stack button.png" id="4_3e2kj"]
-[ext_resource type="Texture2D" uid="uid://bohxlb1va11bs" path="res://settings button.png" id="5_xdvy6"]
 [ext_resource type="Texture2D" uid="uid://cmlftdl7w58pn" path="res://back button.png" id="6_l782h"]
 [ext_resource type="FontFile" uid="uid://dv6rxjsqf5lyn" path="res://PressStart2P.ttf" id="8_3e2kj"]
-[ext_resource type="AudioStream" uid="uid://b70jpeuxi03w" path="res://Audio Asset/starting menu screen.mp3" id="9_uc2ct"]
-[ext_resource type="AudioStream" uid="uid://dhpp67tyc6npq" path="res://Audio Asset/click button.mp3" id="10_a3mbt"]
+[ext_resource type="AudioStream" uid="uid://tytu6ttjlgkq" path="res://Audio Asset/starting menu screen.mp3" id="9_uc2ct"]
+[ext_resource type="AudioStream" uid="uid://cmnddrsny4cox" path="res://Audio Asset/click button.mp3" id="10_a3mbt"]
 
 [node name="ModeSelection" type="Control"]
 layout_mode = 3
@@ -88,18 +87,6 @@ scale = Vector2(0.265543, 0.218205)
 layout_mode = 2
 size_flags_horizontal = 4
 texture_normal = ExtResource("4_3e2kj")
-
-[node name="SettingsButtonContainer" type="VBoxContainer" parent="."]
-layout_mode = 0
-offset_left = 541.0
-offset_top = 92.0
-offset_right = 2161.0
-offset_bottom = 842.0
-scale = Vector2(0.090346, 0.0815194)
-
-[node name="SettingsButton" type="TextureButton" parent="SettingsButtonContainer"]
-layout_mode = 2
-texture_normal = ExtResource("5_xdvy6")
 
 [node name="BackButtonContainer" type="VBoxContainer" parent="."]
 layout_mode = 0

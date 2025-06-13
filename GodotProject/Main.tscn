@@ -1,16 +1,17 @@
-[gd_scene load_steps=12 format=3 uid="uid://buu6w8pk80q3f"]
+[gd_scene load_steps=13 format=3 uid="uid://buu6w8pk80q3f"]
 
 [ext_resource type="Script" uid="uid://ccy7cd22fhbj3" path="res://Main.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://2qv47ukpm61l" path="res://UI.tscn" id="2_trn2v"]
 [ext_resource type="Script" uid="uid://dgtvbxi01c25g" path="res://InfiniteBackground.gd" id="2_uu6xs"]
-[ext_resource type="Texture2D" uid="uid://bq4anywv7onew" path="res://Backgorunds.png" id="4_cm0pq"]
-[ext_resource type="AudioStream" uid="uid://bxw2mj2kxiyjt" path="res://Audio Asset/capybara landing (normal).mp3" id="5_3dxm6"]
-[ext_resource type="AudioStream" uid="uid://buu1fgxdr01l8" path="res://Audio Asset/bgm (endless).mp3" id="6_lgr22"]
-[ext_resource type="AudioStream" uid="uid://bcwxop54iuqw4" path="res://Audio Asset/capybara landing (large).mp3" id="7_03owx"]
-[ext_resource type="AudioStream" uid="uid://daux4mj0l12ji" path="res://Audio Asset/capybara landing (baby).mp3" id="8_wkp8b"]
-[ext_resource type="AudioStream" uid="uid://cfcc5h52k8k5o" path="res://Audio Asset/capybara landing (sleepy).mp3" id="9_20pc6"]
-[ext_resource type="AudioStream" uid="uid://crdx17dkjtpg2" path="res://Audio Asset/capybara drop.mp3" id="10_wkp8b"]
-[ext_resource type="AudioStream" uid="uid://diadiuxnwc2xa" path="res://Audio Asset/game over.mp3" id="11_20pc6"]
+[ext_resource type="Texture2D" uid="uid://b6qyyffqt2qd1" path="res://Backgorunds (1).png" id="4_5vvyt"]
+[ext_resource type="AudioStream" uid="uid://bwc5xk4ac03rj" path="res://Audio Asset/capybara landing (normal).mp3" id="5_3dxm6"]
+[ext_resource type="Script" uid="uid://saiprccofypw" path="res://StarSpawner.gd" id="5_5vvyt"]
+[ext_resource type="AudioStream" uid="uid://ulo3la22tuk1" path="res://Audio Asset/bgm (endless).mp3" id="6_lgr22"]
+[ext_resource type="AudioStream" uid="uid://dpqw1oy68wh1y" path="res://Audio Asset/capybara landing (large).mp3" id="7_03owx"]
+[ext_resource type="AudioStream" uid="uid://btwo3ml30sajt" path="res://Audio Asset/capybara landing (baby).mp3" id="8_wkp8b"]
+[ext_resource type="AudioStream" uid="uid://whfdemsybrc3" path="res://Audio Asset/capybara landing (sleepy).mp3" id="9_20pc6"]
+[ext_resource type="AudioStream" uid="uid://es2omyn8vuun" path="res://Audio Asset/capybara drop.mp3" id="10_wkp8b"]
+[ext_resource type="AudioStream" uid="uid://c0fhn08j81w8q" path="res://Audio Asset/game over.mp3" id="11_20pc6"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1")
@@ -23,17 +24,15 @@ script = ExtResource("2_uu6xs")
 [node name="ParallaxLayer" type="ParallaxLayer" parent="ParallaxBackground"]
 motion_scale = Vector2(1, 0.8)
 
-[node name="TextureRect" type="TextureRect" parent="ParallaxBackground/ParallaxLayer"]
-offset_right = 40.0
-offset_bottom = 40.0
-scale = Vector2(0.672873, 0.624085)
-expand_mode = 1
-stretch_mode = 2
-
 [node name="Backgorunds" type="Sprite2D" parent="ParallaxBackground/ParallaxLayer"]
-position = Vector2(359, -1673)
-scale = Vector2(0.388933, 0.425767)
-texture = ExtResource("4_cm0pq")
+position = Vector2(359.973, -1089)
+scale = Vector2(0.486159, 0.565008)
+texture = ExtResource("4_5vvyt")
+
+[node name="ParallaxLayer_Space" type="ParallaxLayer" parent="ParallaxBackground"]
+
+[node name="StarSpawner" type="Node2D" parent="ParallaxBackground/ParallaxLayer_Space"]
+script = ExtResource("5_5vvyt")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(357, 642)

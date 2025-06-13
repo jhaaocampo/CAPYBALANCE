@@ -16,7 +16,7 @@ var volume_enabled: bool = true
 # Scene paths
 const MAIN_SCENE = "res://Main.tscn"
 const HEIGHT_CHALLENGE_SCENE = "res://HeightChallenge.tscn"
-const LANDING_PAGE_SCENE = "res://LandingPage.tscn"
+const LANDING_PAGE_SCENE = "res://ModeSelection.tscn"
 
 # Game mode detection
 var is_height_challenge: bool = false

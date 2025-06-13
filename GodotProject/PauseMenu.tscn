@@ -21,7 +21,7 @@ script = ExtResource("1_sev4g")
 process_mode = 2
 layer = 100
 
-[node name="GameoverBox" type="TextureRect" parent="CanvasLayer"]
+[node name="GameBox" type="TextureRect" parent="CanvasLayer"]
 offset_left = -302.0
 offset_top = 430.0
 offset_right = 1453.0

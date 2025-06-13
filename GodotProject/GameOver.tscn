@@ -1,14 +1,13 @@
-[gd_scene load_steps=10 format=3 uid="uid://vemh6wr0oru1"]
+[gd_scene load_steps=9 format=3 uid="uid://vemh6wr0oru1"]
 
 [ext_resource type="FontFile" uid="uid://dv6rxjsqf5lyn" path="res://PressStart2P.ttf" id="1_3y56u"]
 [ext_resource type="Script" uid="uid://byf2mmmx6gj02" path="res://GameOver.gd" id="1_ua7od"]
-[ext_resource type="Texture2D" uid="uid://bc3yiesalklmd" path="res://Background.png" id="2_ua7od"]
 [ext_resource type="Texture2D" uid="uid://k0dctlkvytgf" path="res://capybalancelogo.png" id="3_3fonj"]
 [ext_resource type="Texture2D" uid="uid://d3wot3t2r31c7" path="res://Gameover box.png" id="4_758bs"]
 [ext_resource type="Texture2D" uid="uid://dk5ssdj0jlq7m" path="res://Replay button.png" id="5_rr04i"]
 [ext_resource type="Texture2D" uid="uid://vxtgskqapp4e" path="res://leave button.png" id="6_067b4"]
-[ext_resource type="AudioStream" uid="uid://bm2h0jeijxrf1" path="res://Audio Asset/done (height challenge).mp3" id="8_3fonj"]
-[ext_resource type="AudioStream" uid="uid://db7c54twm53kb" path="res://Audio Asset/click button.mp3" id="10_rr04i"]
+[ext_resource type="AudioStream" uid="uid://cmu4nyk4sf41i" path="res://Audio Asset/done (height challenge).mp3" id="8_3fonj"]
+[ext_resource type="AudioStream" uid="uid://cmnddrsny4cox" path="res://Audio Asset/click button.mp3" id="10_rr04i"]
 
 [node name="GameOver" type="Control"]
 layout_mode = 3
@@ -38,22 +37,6 @@ theme_override_fonts/font = ExtResource("1_3y56u")
 theme_override_font_sizes/font_size = 90
 text = "GAME OVER!"
 
-[node name="Background" type="TextureRect" parent="."]
-visible = false
-z_index = -1
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -6.0
-offset_right = 251.0
-offset_bottom = 420.0
-grow_horizontal = 2
-grow_vertical = 2
-scale = Vector2(0.739095, 0.751704)
-texture = ExtResource("2_ua7od")
-expand_mode = 3
-
 [node name="Logo" type="TextureRect" parent="."]
 layout_mode = 0
 offset_left = -7.0
@@ -63,7 +46,7 @@ offset_bottom = 1920.0
 scale = Vector2(0.355578, 0.334725)
 texture = ExtResource("3_3fonj")
 
-[node name="GameoverBox" type="TextureRect" parent="."]
+[node name="Box" type="TextureRect" parent="."]
 layout_mode = 0
 offset_left = -307.0
 offset_top = 552.0

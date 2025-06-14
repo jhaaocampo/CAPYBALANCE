@@ -57,36 +57,19 @@ func connect_button_signals():
 	yes_button.button_up.connect(func(): _on_button_released(yes_button))
 
 func animate_entrance():
-	# Create the main entrance tween
+	# Create the main entrance tween for both buttons simultaneously
 	var entrance_tween = create_tween()
 	entrance_tween.set_parallel(true)
 	
-	# Animate No button first
+	# Animate both buttons at the same time
 	entrance_tween.tween_property(no_button, "modulate:a", 1.0, 0.3)
 	entrance_tween.tween_property(no_button, "scale", Vector2.ONE, 0.3)
+	entrance_tween.tween_property(yes_button, "modulate:a", 1.0, 0.3)
+	entrance_tween.tween_property(yes_button, "scale", Vector2.ONE, 0.3)
 	
 	# Set easing for the entrance
 	entrance_tween.set_ease(Tween.EASE_OUT)
 	entrance_tween.set_trans(Tween.TRANS_BACK)
-	
-	# Create a separate tween for the Yes button with delay
-	entrance_tween.finished.connect(_animate_yes_button_delayed)
-
-func _animate_yes_button_delayed():
-	# Create a delay before animating the Yes button
-	var delay_timer = get_tree().create_timer(0.1)
-	delay_timer.timeout.connect(_animate_yes_button)
-
-func _animate_yes_button():
-	# Animate Yes button after delay
-	var yes_tween = create_tween()
-	yes_tween.set_parallel(true)
-	
-	yes_tween.tween_property(yes_button, "modulate:a", 1.0, 0.3)
-	yes_tween.tween_property(yes_button, "scale", Vector2.ONE, 0.3)
-	
-	yes_tween.set_ease(Tween.EASE_OUT)
-	yes_tween.set_trans(Tween.TRANS_BACK)
 
 # Button hover effects - Using TextureButton to match your scene
 func _on_button_hover(button: TextureButton):
@@ -101,12 +84,9 @@ func _on_button_hover(button: TextureButton):
 	var hover_tween = create_tween()
 	hover_tween.set_parallel(true)
 	
-	# Scale up and brighten
-	hover_tween.tween_property(button, "scale", Vector2(1.1, 1.1), 0.15)
-	hover_tween.tween_property(button, "modulate", Color(1.2, 1.2, 1.2, 1.0), 0.15)
-	
-	# Add subtle rotation for extra flair
-	hover_tween.tween_property(button, "rotation", deg_to_rad(2), 0.15)
+	# Scale up and brighten (removed rotation)
+	hover_tween.tween_property(button, "scale", Vector2(1.05, 1.05), 0.1)
+	hover_tween.tween_property(button, "modulate", Color(1.2, 1.2, 1.2, 1.0), 0.1)
 	
 	# Set easing
 	hover_tween.set_ease(Tween.EASE_OUT)
@@ -128,10 +108,9 @@ func _on_button_unhover(button: TextureButton):
 	var unhover_tween = create_tween()
 	unhover_tween.set_parallel(true)
 	
-	# Scale back to normal and reset brightness
+	# Scale back to normal and reset brightness (removed rotation reset)
 	unhover_tween.tween_property(button, "scale", Vector2.ONE, 0.15)
 	unhover_tween.tween_property(button, "modulate", Color.WHITE, 0.15)
-	unhover_tween.tween_property(button, "rotation", 0.0, 0.15)
 	
 	# Set easing
 	unhover_tween.set_ease(Tween.EASE_OUT)
@@ -152,7 +131,7 @@ func _on_button_pressed(button: TextureButton):
 func _on_button_released(button: TextureButton):
 	# Quick release animation - scale back up
 	var release_tween = create_tween()
-	release_tween.tween_property(button, "scale", Vector2(1.1, 1.1), 0.05)
+	release_tween.tween_property(button, "scale", Vector2(1.15, 1.15), 0.05)
 	release_tween.set_ease(Tween.EASE_OUT)
 
 # Button action functions

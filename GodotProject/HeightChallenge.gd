@@ -84,7 +84,7 @@ func _process(delta):
 	if tipping_over:
 		game_over_timer += delta
 		if game_over_timer >= game_over_delay:
-			get_tree().reload_current_scene()
+			show_game_over_screen()
 		return  # Don't process anything else during game over
 	
 	# Check for fallen capybaras FIRST - before any other logic

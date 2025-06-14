@@ -16,7 +16,6 @@ grow_vertical = 2
 script = ExtResource("1_tfw3m")
 
 [node name="GameoverBox" type="TextureRect" parent="."]
-visible = false
 layout_mode = 0
 offset_left = -300.0
 offset_top = 582.0
@@ -35,9 +34,9 @@ offset_bottom = 37.0
 
 [node name="OhNo" type="Label" parent="OhNoText"]
 layout_mode = 0
-offset_left = 95.0
+offset_left = 99.0
 offset_top = 464.0
-offset_right = 1085.0
+offset_right = 1089.0
 offset_bottom = 613.0
 scale = Vector2(0.651614, 0.651361)
 theme_override_colors/font_color = Color(1, 0.788235, 0.0823529, 1)

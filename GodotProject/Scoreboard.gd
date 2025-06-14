@@ -15,6 +15,10 @@ enum GameMode { STACKING, HEIGHT_CHALLENGE }
 
 var current_game_mode: GameMode = GameMode.STACKING
 
+# Position storage for HighScore label
+var high_score_original_position: Vector2
+var high_score_stacking_offset: Vector2 = Vector2(0, -100)  # Move 50 pixels up for stacking mode
+
 # Stacking mode variables
 var current_score: int = 0
 var stacking_high_score: int = 0
@@ -26,7 +30,17 @@ var challenge_active: bool = false
 var current_height: int = 0
 var best_height: int = 0
 
+# Pause button hover and click effects
+var pause_button_original_scale: Vector2
+var pause_button_hover_tween: Tween
+var pause_button_click_tween: Tween
+
+
 func _ready():
+	# Store the original position of the high score label
+	if high_score_label:
+		high_score_original_position = high_score_label.position
+	
 	detect_game_mode()
 	load_high_scores()
 	load_volume_setting()  # Load volume setting
@@ -34,6 +48,18 @@ func _ready():
 	setup_pause_button()
 	update_display()
 	connect_to_game_signals()
+
+# Position adjustment for HighScore label based on game mode
+func adjust_high_score_position():
+	if not high_score_label:
+		return
+	
+	if current_game_mode == GameMode.STACKING:
+		# Set static position higher for stacking mode
+		high_score_label.position = high_score_original_position + high_score_stacking_offset
+	else:
+		# Use original position for height challenge mode
+		high_score_label.position = high_score_original_position
 
 # Volume functions
 func setup_volume_button():
@@ -95,10 +121,12 @@ func detect_game_mode():
 			if script_path.get_file() == "HeightChallenge.gd":
 				current_game_mode = GameMode.HEIGHT_CHALLENGE
 				print("Detected HEIGHT_CHALLENGE mode via scene script")
+				adjust_high_score_position()  # Adjust position after mode detection
 				return
 			
 	current_game_mode = GameMode.STACKING
 	print("Detected STACKING mode (default)")
+	adjust_high_score_position()  # Adjust position after mode detection
 
 func load_height_challenge_best():
 	var save_file = FileAccess.open("user://height_challenge_save.save", FileAccess.READ)
@@ -120,6 +148,7 @@ func set_height_challenge_mode(is_height_challenge: bool, duration: float = 60.0
 		challenge_active = false
 		print("Scoreboard set to STACKING mode")
 	
+	adjust_high_score_position()  # Adjust position when mode changes
 	update_display()
 
 func _process(delta):
@@ -228,15 +257,15 @@ func update_display():
 		update_height_challenge_display()
 
 func update_stacking_display():
-	score_label.text = "Stacks\n" + str(current_score)
-	high_score_label.text = "High Score\n" + str(stacking_high_score)
+	score_label.text = "\n" + str(current_score)
+	high_score_label.text = "Highest\nStack\n" + str(stacking_high_score)
 	
 	if timer_label:
 		timer_label.visible = false
 
 func update_height_challenge_display():
-	score_label.text = "Height\n" + str(current_height)
-	high_score_label.text = "Best Height\n" + str(best_height)
+	score_label.text = "\n" + str(current_height)
+	high_score_label.text = "Best\nHeight\n" + str(best_height)
 	
 	if timer_label:
 		timer_label.visible = true
@@ -260,17 +289,23 @@ func format_countdown_time(time_seconds: float) -> String:
 	return "%01d:%02d.%02d" % [minutes, seconds, decimal]
 
 # Animations
+# Replace the animate_score_increase function in Scoreboard.gd with this version:
+
 func animate_score_increase():
 	var tween = create_tween()
 	tween.set_parallel(true)
 	
+	# Scale animation (keep for both modes)
 	score_label.scale = Vector2(1.2, 1.2)
 	tween.tween_property(score_label, "scale", Vector2(1.0, 1.0), 0.2)
 	
-	var flash_color = Color.YELLOW if current_game_mode == GameMode.STACKING else Color.CYAN
-	var original_color = score_label.modulate
-	score_label.modulate = flash_color
-	tween.tween_property(score_label, "modulate", original_color, 0.3)
+	# Color modulation - only for stacking mode
+	if current_game_mode == GameMode.STACKING:
+		var flash_color = Color.YELLOW
+		var original_color = score_label.modulate
+		score_label.modulate = flash_color
+		tween.tween_property(score_label, "modulate", original_color, 0.3)
+	# For height challenge mode, keep original color (no color animation)
 	
 	# Play sound effect if volume is enabled
 	if volume_enabled:
@@ -348,9 +383,29 @@ func connect_to_game_signals():
 			game_manager.stack_changed.connect(_on_stack_changed)
 		elif game_manager.has_signal("capy_added"):
 			game_manager.capy_added.connect(_on_capy_added)
+	
+	# Also try to connect to HeightChallenge if that's the current scene
+	var current_scene = get_tree().current_scene
+	if current_scene and current_scene.has_signal("stack_changed"):
+		current_scene.stack_changed.connect(_on_stack_changed)
+		print("Connected to HeightChallenge stack_changed signal")
 
 func _on_stack_changed():
-	update_current_height()
+	if current_game_mode == GameMode.HEIGHT_CHALLENGE:
+		# Get the current height from the game scene
+		var game_scene = get_tree().current_scene
+		if game_scene and game_scene.get("capys_stack"):
+			var new_height = game_scene.capys_stack.size()
+			if new_height > current_height:
+				# Height increased, animate it
+				current_height = new_height
+				update_display()
+				animate_score_increase()
+			else:
+				current_height = new_height
+				update_display()
+	else:
+		update_current_height()
 
 func _on_capy_added():
 	if current_game_mode == GameMode.HEIGHT_CHALLENGE:
@@ -364,8 +419,55 @@ func is_volume_enabled() -> bool:
 	
 func setup_pause_button():
 	if pause_button:
+		# Store original scale
+		pause_button_original_scale = pause_button.scale
+		
+		# Connect signals
 		pause_button.pressed.connect(_on_pause_button_pressed)
+		pause_button.mouse_entered.connect(_on_pause_button_hover_enter)
+		pause_button.mouse_exited.connect(_on_pause_button_hover_exit)
+		pause_button.button_down.connect(_on_pause_button_down)
+		pause_button.button_up.connect(_on_pause_button_up)
 
+# Hover effects
+func _on_pause_button_hover_enter():
+	# Play UI sound if volume is enabled
+	if volume_enabled:
+		play_ui_sound()
+
+func _on_pause_button_hover_exit():
+	# No visual effect needed for hover exit
+	pass
+
+# Click effects
+func _on_pause_button_down():
+	# Cancel any existing click tween
+	if pause_button_click_tween:
+		pause_button_click_tween.kill()
+	
+	# Create new tween for press effect
+	pause_button_click_tween = create_tween()
+	pause_button_click_tween.set_parallel(true)
+	
+	# Scale down slightly and brighten
+	var pressed_scale = pause_button_original_scale * 0.95
+	pause_button_click_tween.tween_property(pause_button, "scale", pressed_scale, 0.05)
+	pause_button_click_tween.tween_property(pause_button, "modulate", Color(1.3, 1.3, 1.3, 1.0), 0.05)
+
+func _on_pause_button_up():
+	# Cancel any existing click tween
+	if pause_button_click_tween:
+		pause_button_click_tween.kill()
+	
+	# Create new tween for release effect
+	pause_button_click_tween = create_tween()
+	pause_button_click_tween.set_parallel(true)
+	
+	# Return to original scale and normal color
+	pause_button_click_tween.tween_property(pause_button, "scale", pause_button_original_scale, 0.1)
+	pause_button_click_tween.tween_property(pause_button, "modulate", Color.WHITE, 0.1)
+
+# Your existing pause function remains the same
 func _on_pause_button_pressed():
 	pause_game()
 

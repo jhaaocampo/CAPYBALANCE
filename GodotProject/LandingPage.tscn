@@ -1,13 +1,12 @@
-[gd_scene load_steps=9 format=3 uid="uid://dio66r5h6282k"]
+[gd_scene load_steps=8 format=3 uid="uid://dio66r5h6282k"]
 
 [ext_resource type="Texture2D" uid="uid://bc3yiesalklmd" path="res://Background.png" id="1_fe6hs"]
 [ext_resource type="Script" uid="uid://cm74rd08yc1w2" path="res://LandingPage.gd" id="1_ur3vi"]
 [ext_resource type="Texture2D" uid="uid://k0dctlkvytgf" path="res://capybalancelogo.png" id="2_ur3vi"]
 [ext_resource type="Texture2D" uid="uid://qtpr141yk62m" path="res://start button.png" id="3_ar278"]
-[ext_resource type="AudioStream" uid="uid://cmnddrsny4cox" path="res://Audio Asset/click button.mp3" id="3_l42u6"]
+[ext_resource type="AudioStream" uid="uid://bgd4chsn2uv6y" path="res://Audio Asset/click button.mp3" id="3_l42u6"]
 [ext_resource type="Texture2D" uid="uid://vxtgskqapp4e" path="res://leave button.png" id="4_l42u6"]
-[ext_resource type="Texture2D" uid="uid://bohxlb1va11bs" path="res://settings button.png" id="5_flxnd"]
-[ext_resource type="AudioStream" uid="uid://tytu6ttjlgkq" path="res://Audio Asset/starting menu screen.mp3" id="7_ar278"]
+[ext_resource type="AudioStream" uid="uid://bl823xxq0ttus" path="res://Audio Asset/starting menu screen.mp3" id="7_ar278"]
 
 [node name="LandingPage" type="Control"]
 layout_mode = 3
@@ -32,8 +31,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -6.0
-offset_right = 251.0
+offset_left = -1.0
+offset_right = 256.0
 offset_bottom = 420.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -66,25 +65,13 @@ texture_normal = ExtResource("3_ar278")
 
 [node name="LeaveButtonContainer" type="VBoxContainer" parent="."]
 layout_mode = 0
-offset_left = 204.0
-offset_top = 905.0
-offset_right = 1824.0
-offset_bottom = 1655.0
+offset_left = 221.0
+offset_top = 887.0
+offset_right = 1841.0
+offset_bottom = 1637.0
 scale = Vector2(0.17168, 0.147613)
 
 [node name="LeaveButton" type="TextureButton" parent="LeaveButtonContainer"]
 layout_mode = 2
 size_flags_horizontal = 4
 texture_normal = ExtResource("4_l42u6")
-
-[node name="SettingsButtonContainer" type="VBoxContainer" parent="."]
-layout_mode = 0
-offset_left = 541.0
-offset_top = 92.0
-offset_right = 2161.0
-offset_bottom = 842.0
-scale = Vector2(0.090346, 0.0815194)
-
-[node name="SettingsButton" type="TextureButton" parent="SettingsButtonContainer"]
-layout_mode = 2
-texture_normal = ExtResource("5_flxnd")

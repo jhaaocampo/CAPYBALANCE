@@ -6,8 +6,8 @@
 [ext_resource type="Texture2D" uid="uid://d3wot3t2r31c7" path="res://Gameover box.png" id="4_758bs"]
 [ext_resource type="Texture2D" uid="uid://dk5ssdj0jlq7m" path="res://Replay button.png" id="5_rr04i"]
 [ext_resource type="Texture2D" uid="uid://vxtgskqapp4e" path="res://leave button.png" id="6_067b4"]
-[ext_resource type="AudioStream" uid="uid://cmu4nyk4sf41i" path="res://Audio Asset/done (height challenge).mp3" id="8_3fonj"]
-[ext_resource type="AudioStream" uid="uid://cmnddrsny4cox" path="res://Audio Asset/click button.mp3" id="10_rr04i"]
+[ext_resource type="AudioStream" uid="uid://dimv1uh87h4m" path="res://Audio Asset/done (height challenge).mp3" id="8_3fonj"]
+[ext_resource type="AudioStream" uid="uid://bgd4chsn2uv6y" path="res://Audio Asset/click button.mp3" id="10_rr04i"]
 
 [node name="GameOver" type="Control"]
 layout_mode = 3
@@ -26,16 +26,18 @@ offset_bottom = 40.0
 
 [node name="Label" type="Label" parent="GameModeText"]
 layout_mode = 0
-offset_left = 82.0
-offset_top = 464.0
-offset_right = 1072.0
-offset_bottom = 613.0
+offset_left = 47.0
+offset_top = 445.0
+offset_right = 1037.0
+offset_bottom = 594.0
 scale = Vector2(0.651614, 0.651361)
 theme_override_colors/font_color = Color(1, 0.788235, 0.0823529, 1)
 theme_override_colors/font_shadow_color = Color(0.568973, 0.568973, 0.568973, 1)
 theme_override_fonts/font = ExtResource("1_3y56u")
 theme_override_font_sizes/font_size = 90
 text = "GAME OVER!"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Logo" type="TextureRect" parent="."]
 layout_mode = 0
@@ -58,9 +60,9 @@ texture = ExtResource("4_758bs")
 [node name="ReplayButtonContainer" type="VBoxContainer" parent="."]
 layout_mode = 0
 offset_left = 230.0
-offset_top = 975.0
+offset_top = 1003.0
 offset_right = 1985.0
-offset_bottom = 2595.0
+offset_bottom = 2623.0
 scale = Vector2(0.139891, 0.11173)
 theme_override_constants/separation = 30
 
@@ -72,9 +74,9 @@ texture_normal = ExtResource("5_rr04i")
 [node name="LeaveButtonContainer" type="VBoxContainer" parent="."]
 layout_mode = 0
 offset_left = 285.0
-offset_top = 1069.0
+offset_top = 1103.0
 offset_right = 1905.0
-offset_bottom = 1819.0
+offset_bottom = 1853.0
 scale = Vector2(0.0836657, 0.0803381)
 
 [node name="LeaveButton" type="TextureButton" parent="LeaveButtonContainer"]
@@ -89,47 +91,51 @@ offset_bottom = 40.0
 
 [node name="StacksGained" type="Label" parent="ScoreSummary"]
 layout_mode = 0
-offset_left = 131.0
-offset_top = 605.0
-offset_right = 586.0
-offset_bottom = 640.0
+offset_left = 59.0
+offset_top = 619.0
+offset_right = 654.0
+offset_bottom = 654.0
 theme_override_colors/font_color = Color(0.403922, 0.231373, 0.027451, 1)
 theme_override_fonts/font = ExtResource("1_3y56u")
 theme_override_font_sizes/font_size = 35
-text = "STACKS GAINED"
+text = "CAPYsBALANCED!"
+horizontal_alignment = 1
 
 [node name="StacksGainedScore" type="Label" parent="ScoreSummary"]
 layout_mode = 0
-offset_left = 334.0
-offset_top = 675.0
-offset_right = 394.0
-offset_bottom = 735.0
+offset_left = 244.0
+offset_top = 687.0
+offset_right = 465.0
+offset_bottom = 747.0
 theme_override_colors/font_color = Color(0.403922, 0.231373, 0.027451, 1)
 theme_override_fonts/font = ExtResource("1_3y56u")
 theme_override_font_sizes/font_size = 60
 text = "0"
+horizontal_alignment = 1
 
 [node name="HighestStack" type="Label" parent="ScoreSummary"]
 layout_mode = 0
-offset_left = 121.0
-offset_top = 790.0
-offset_right = 576.0
-offset_bottom = 825.0
+offset_left = 124.0
+offset_top = 789.0
+offset_right = 579.0
+offset_bottom = 824.0
 theme_override_colors/font_color = Color(0.403922, 0.231373, 0.027451, 1)
 theme_override_fonts/font = ExtResource("1_3y56u")
 theme_override_font_sizes/font_size = 35
 text = "HIGHEST STACK"
+horizontal_alignment = 1
 
 [node name="HighestStackScore" type="Label" parent="ScoreSummary"]
 layout_mode = 0
-offset_left = 334.0
-offset_top = 865.0
-offset_right = 394.0
-offset_bottom = 925.0
+offset_left = 247.0
+offset_top = 858.0
+offset_right = 465.0
+offset_bottom = 918.0
 theme_override_colors/font_color = Color(0.403922, 0.231373, 0.027451, 1)
 theme_override_fonts/font = ExtResource("1_3y56u")
 theme_override_font_sizes/font_size = 60
 text = "0"
+horizontal_alignment = 1
 
 [node name="HighScoreSound" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("8_3fonj")

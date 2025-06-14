@@ -20,13 +20,13 @@ extends Control
 
 # Animation variables
 var replay_pulse_tween: Tween
+var leave_pulse_tween: Tween
 var stats_animation_tween: Tween
 
 # Scene paths
 const ENDLESS_STACK_SCENE = "res://Main.tscn"
 const HEIGHT_CHALLENGE_SCENE = "res://HeightChallenge.tscn"
-const LANDING_PAGE_SCENE = "res://LandingPage.tscn"
-const LEAVE_SCENE = "res://LeaveScene.tscn"  # Add your custom leave scene path
+const MODE_SELECTION_SCENE = "res://ModeSelection.tscn"  # Changed from LANDING_PAGE_SCENE
 
 # Game data
 var current_score: int = 0
@@ -36,9 +36,6 @@ var is_new_record: bool = false
 
 # Volume state
 var volume_enabled: bool = true
-
-# Leave scene overlay reference
-var leave_scene_instance: Control = null
 
 func _ready():
 	# Validate that all required nodes exist
@@ -72,8 +69,9 @@ func _ready():
 	get_game_data()
 	setup_display()
 	
-	# Start animations
+	# Start animations - both buttons now pulse
 	start_replay_pulse_animation()
+	start_leave_pulse_animation()
 	animate_entrance()
 	
 	# Ensure the game is unpaused when this scene is ready
@@ -225,7 +223,7 @@ func setup_display():
 			highest_stack_label.text = "BEST HEIGHT"
 	else:
 		if stacks_gained_label:
-			stacks_gained_label.text = "STACKS GAINED"
+			stacks_gained_label.text = "CAPYsBALANCED!"
 		if highest_stack_label:
 			highest_stack_label.text = "HIGHEST STACK"
 	
@@ -237,7 +235,7 @@ func setup_display():
 		game_over_label.modulate = Color.GOLD
 		play_high_score_sound()
 
-# Animation functions
+# UPDATED: Enhanced pulsing animation functions (similar to LandingPage)
 func start_replay_pulse_animation():
 	if not replay_button:
 		return
@@ -248,13 +246,32 @@ func start_replay_pulse_animation():
 	replay_pulse_tween = create_tween()
 	replay_pulse_tween.set_loops() # Infinite loop
 	
-	# Scale up and down with a smooth ease
+	# Scale up and down with a smooth ease (matching LandingPage style)
 	replay_pulse_tween.tween_property(replay_button, "scale", Vector2(1.05, 1.05), 0.8)
 	replay_pulse_tween.tween_property(replay_button, "scale", Vector2.ONE, 0.8)
 	
 	# Set easing for smoother animation
 	replay_pulse_tween.set_ease(Tween.EASE_IN_OUT)
 	replay_pulse_tween.set_trans(Tween.TRANS_SINE)
+
+# NEW: Pulsing animation for leave button (similar to LandingPage)
+func start_leave_pulse_animation():
+	if not leave_button:
+		return
+		
+	if leave_pulse_tween:
+		leave_pulse_tween.kill()
+	
+	leave_pulse_tween = create_tween()
+	leave_pulse_tween.set_loops() # Infinite loop
+	
+	# Scale up and down with a smooth ease - slightly different timing for variety
+	leave_pulse_tween.tween_property(leave_button, "scale", Vector2(1.04, 1.04), 1.0)
+	leave_pulse_tween.tween_property(leave_button, "scale", Vector2.ONE, 0.8)
+	
+	# Set easing for smoother animation
+	leave_pulse_tween.set_ease(Tween.EASE_IN_OUT)
+	leave_pulse_tween.set_trans(Tween.TRANS_SINE)
 
 func animate_entrance():
 	# Check if nodes exist before animating
@@ -306,207 +323,19 @@ func animate_new_record():
 	record_tween.tween_property(highest_stack_score, "modulate", Color.WHITE, 0.3)
 	record_tween.tween_property(highest_stack_score, "modulate", Color.GOLD, 0.3)
 
-# Button interaction functions
+# UPDATED: Enhanced button interaction functions (matching LandingPage style)
 func _on_button_pressed(button: TextureButton):
-	# Create a temporary press animation that doesn't interfere with pulsing
 	var press_tween = create_tween()
 	var original_modulate = button.modulate
-	press_tween.tween_property(button, "modulate", Color(0.8, 0.8, 0.8, 1.0), 0.1)
+	# Make button brighter when pressed (like the LandingPage hover effect)
+	press_tween.tween_property(button, "modulate", Color(1.3, 1.3, 1.3, 1.0), 0.1)
 	press_tween.tween_property(button, "modulate", original_modulate, 0.1)
 
-# UPDATED: Hide GameOver and show LeaveScene
-func show_leave_scene():
-	# Prevent showing multiple leave scenes
-	if leave_scene_instance != null:
-		return
-	
-	# Hide the current GameOver screen first with animation
-	hide_game_over_screen_animated()
-	
-	# Load and instantiate the leave scene after a short delay
-	await get_tree().create_timer(0.2).timeout
-	
-	var leave_scene_resource = load(LEAVE_SCENE)
-	if leave_scene_resource == null:
-		push_error("Failed to load LeaveScene.tscn")
-		show_game_over_screen()  # Show GameOver back if loading failed
-		return
-	
-	leave_scene_instance = leave_scene_resource.instantiate()
-	if leave_scene_instance == null:
-		push_error("Failed to instantiate LeaveScene")
-		show_game_over_screen()  # Show GameOver back if instantiation failed
-		return
-	
-	# Add it as a child to this scene
-	add_child(leave_scene_instance)
-	
-	# Set it up as a full screen replacement
-	setup_leave_scene_overlay()
-	
-	# Connect to leave scene signals
-	connect_leave_scene_signals()
-
-# UPDATED: Hide GameOver screen with animation
-func hide_game_over_screen_animated():
-	# Stop any ongoing animations first
-	if replay_pulse_tween:
-		replay_pulse_tween.kill()
-	
-	# Create fade out animation
-	var fade_out_tween = create_tween()
-	fade_out_tween.set_parallel(true)
-	
-	# Fade out all elements
-	if game_over_label:
-		fade_out_tween.tween_property(game_over_label, "modulate:a", 0.0, 0.2)
-	if stats_container:
-		fade_out_tween.tween_property(stats_container, "modulate:a", 0.0, 0.2)
-	if replay_button:
-		fade_out_tween.tween_property(replay_button, "modulate:a", 0.0, 0.2)
-	if leave_button:
-		fade_out_tween.tween_property(leave_button, "modulate:a", 0.0, 0.2)
-	
-	# Scale down slightly for extra effect
-	fade_out_tween.tween_property(self, "scale", Vector2(0.95, 0.95), 0.2)
-	
-	# After animation completes, hide the elements completely
-	fade_out_tween.finished.connect(hide_game_over_screen)
-
-func hide_game_over_screen():
-	# Hide all main UI elements of the GameOver screen
-	if game_over_label:
-		game_over_label.visible = false
-	if stats_container:
-		stats_container.visible = false
-	if replay_button:
-		replay_button.visible = false
-	if leave_button:
-		leave_button.visible = false
-
-# UPDATED: Show GameOver screen with animation
-func show_game_over_screen():
-	# First make elements visible but transparent
-	if game_over_label:
-		game_over_label.visible = true
-		game_over_label.modulate.a = 0.0
-	if stats_container:
-		stats_container.visible = true
-		stats_container.modulate.a = 0.0
-	if replay_button:
-		replay_button.visible = true
-		replay_button.modulate.a = 0.0
-	if leave_button:
-		leave_button.visible = true
-		leave_button.modulate.a = 0.0
-	
-	# Reset scale
-	scale = Vector2.ONE
-	
-	# Create fade in animation
-	var fade_in_tween = create_tween()
-	fade_in_tween.set_parallel(true)
-	
-	# Fade in all elements
-	if game_over_label:
-		fade_in_tween.tween_property(game_over_label, "modulate:a", 1.0, 0.3)
-	if stats_container:
-		fade_in_tween.tween_property(stats_container, "modulate:a", 1.0, 0.3)
-	if replay_button:
-		fade_in_tween.tween_property(replay_button, "modulate:a", 1.0, 0.3)
-	if leave_button:
-		fade_in_tween.tween_property(leave_button, "modulate:a", 1.0, 0.3)
-	
-	# Restart the pulse animation after fade in completes
-	fade_in_tween.finished.connect(start_replay_pulse_animation)
-
-func setup_leave_scene_overlay():
-	if leave_scene_instance == null:
-		return
-	
-	# Make sure it's on top
-	leave_scene_instance.z_index = 1000
-	
-	# Set to fill screen if it's a Control node
-	if leave_scene_instance is Control:
-		leave_scene_instance.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	
-	# Add entrance animation
-	animate_leave_scene_entrance()
-
-func animate_leave_scene_entrance():
-	if leave_scene_instance == null:
-		return
-	
-	# Start with the leave scene invisible and slightly scaled down
-	leave_scene_instance.modulate.a = 0.0
-	leave_scene_instance.scale = Vector2(0.9, 0.9)
-	
-	# Fade it in and scale up
-	var fade_tween = create_tween()
-	fade_tween.set_parallel(true)
-	fade_tween.tween_property(leave_scene_instance, "modulate:a", 1.0, 0.3)
-	fade_tween.tween_property(leave_scene_instance, "scale", Vector2.ONE, 0.3)
-	fade_tween.set_ease(Tween.EASE_OUT)
-	fade_tween.set_trans(Tween.TRANS_BACK)
-
-func connect_leave_scene_signals():
-	if leave_scene_instance == null:
-		return
-	
-	# Connect to common signals that your LeaveScene might emit
-	if leave_scene_instance.has_signal("leave_confirmed"):
-		leave_scene_instance.leave_confirmed.connect(_on_leave_confirmed)
-	
-	if leave_scene_instance.has_signal("leave_cancelled"):
-		leave_scene_instance.leave_cancelled.connect(_on_leave_cancelled)
-	
-	# Connect to your specific button names from the scene tree
-	var no_button = leave_scene_instance.find_child("NoButton", true, false)
-	var yes_button = leave_scene_instance.find_child("YesButton", true, false)
-	
-	if no_button and no_button.has_signal("pressed"):
-		no_button.pressed.connect(_on_leave_cancelled)  # NO = Cancel/Stay
-		print("Connected to NoButton")
-	
-	if yes_button and yes_button.has_signal("pressed"):
-		yes_button.pressed.connect(_on_leave_confirmed)  # YES = Confirm/Quit
-		print("Connected to YesButton")
-
-func _on_leave_confirmed():
-	# User confirmed they want to leave
-	print("Leave confirmed")
-	hide_leave_scene()
-	_quit_game()
-
-func _on_leave_cancelled():
-	# User cancelled, show the GameOver screen again
-	print("Leave cancelled")
-	hide_leave_scene()
-	# Wait a moment before showing GameOver screen again
-	await get_tree().create_timer(0.1).timeout
-	show_game_over_screen()
-
-func hide_leave_scene():
-	if leave_scene_instance == null:
-		return
-	
-	# Optional: Add exit animation before removing
-	var fade_tween = create_tween()
-	fade_tween.set_parallel(true)
-	fade_tween.tween_property(leave_scene_instance, "modulate:a", 0.0, 0.2)
-	fade_tween.tween_property(leave_scene_instance, "scale", Vector2(0.9, 0.9), 0.2)
-	fade_tween.tween_callback(remove_leave_scene).set_delay(0.2)
-
-func remove_leave_scene():
-	if leave_scene_instance != null:
-		leave_scene_instance.queue_free()
-		leave_scene_instance = null
-
 func _on_button_released(button: TextureButton):
-	# No special release animation needed
+	# No special release animation needed (matching LandingPage)
 	pass
 
+# UPDATED: Enhanced hover functions (matching LandingPage)
 func _on_button_hover():
 	play_hover_sound()
 
@@ -518,15 +347,61 @@ func _on_replay_button_pressed():
 	play_button_sound()
 	replay_game()
 
-# UPDATED: Show custom leave scene and hide GameOver
+# UPDATED: Navigate directly to ModeSelection instead of showing leave scene
 func _on_leave_button_pressed():
 	play_leaving_sound()
 	if volume_enabled:
 		play_button_sound()
-	show_leave_scene()  # This now hides GameOver first with animation
+	go_to_mode_selection()  # Changed from show_leave_scene()
 
-func _quit_game():
-	get_tree().quit()
+# NEW: Navigate to ModeSelection scene
+func go_to_mode_selection():
+	# Disable buttons during transition
+	if replay_button:
+		replay_button.disabled = true
+	if leave_button:
+		leave_button.disabled = true
+	
+	# Stop pulse animations
+	if replay_pulse_tween:
+		replay_pulse_tween.kill()
+	if leave_pulse_tween:
+		leave_pulse_tween.kill()
+	
+	# Unpause the game
+	get_tree().paused = false
+	
+	# Clean up the UI canvas if it exists
+	cleanup_ui_canvas()
+	
+	# Try multiple possible paths for ModeSelection
+	var mode_selection_paths = [
+		"res://ModeSelection.tscn",
+		"res://scenes/ModeSelection.tscn",
+		"res://ui/ModeSelection.tscn",
+		"res://LandingPage.tscn"  # Fallback to landing page if ModeSelection doesn't exist
+	]
+	
+	var scene_to_load = ""
+	for path in mode_selection_paths:
+		if ResourceLoader.exists(path):
+			scene_to_load = path
+			break
+	
+	if scene_to_load == "":
+		# If no scene found, quit the game as fallback
+		print("No valid scene found, quitting game")
+		get_tree().quit()
+		return
+	
+	print("Loading scene: ", scene_to_load)
+	
+	# Immediate scene change without fade for reliability
+	var result = get_tree().change_scene_to_file(scene_to_load)
+	if result != OK:
+		print("Failed to load scene, trying alternative method")
+		# Alternative method using call_deferred
+		get_tree().call_deferred("change_scene_to_file", scene_to_load)
 
 # Scene transition functions
 func replay_game():
@@ -535,10 +410,6 @@ func replay_game():
 		replay_button.disabled = true
 	if leave_button:
 		leave_button.disabled = true
-	
-	# Hide leave scene if it's showing
-	if leave_scene_instance != null:
-		remove_leave_scene()
 	
 	# Unpause the game
 	get_tree().paused = false
@@ -549,31 +420,27 @@ func replay_game():
 	# Simply reload the current scene (same as pressing R key in main game)
 	get_tree().reload_current_scene()
 
-func go_to_landing_page():
-	# Disable buttons during transition
-	replay_button.disabled = true
-	leave_button.disabled = true
-	
-	# Hide leave scene if it's showing
-	if leave_scene_instance != null:
-		remove_leave_scene()
-	
-	# Unpause the game
-	get_tree().paused = false
-	
-	# Clean up the UI canvas if it exists
-	cleanup_ui_canvas()
-	
-	# Fade out and transition to landing page
-	var tween = create_tween()
-	tween.tween_property(self, "modulate:a", 0.0, 0.5)
-	tween.tween_callback(func(): get_tree().change_scene_to_file(LANDING_PAGE_SCENE))
-
 # Add cleanup function for the UI canvas
 func cleanup_ui_canvas():
+	# Clean up any UI canvas references
 	var ui_canvas = get_meta("ui_canvas", null)
 	if ui_canvas and is_instance_valid(ui_canvas):
 		ui_canvas.queue_free()
+	
+	# Also try to clean up any remaining UI elements from the game scene
+	var main_scene = get_tree().current_scene
+	if main_scene:
+		# Find and clean up UI containers
+		var ui_containers = main_scene.find_children("UI", "", false)
+		for ui in ui_containers:
+			if ui and is_instance_valid(ui):
+				ui.visible = true  # Make sure UI is visible for next game
+		
+		# Find and clean up scoreboards
+		var scoreboards = main_scene.find_children("Scoreboard", "", false)  
+		for scoreboard in scoreboards:
+			if scoreboard and is_instance_valid(scoreboard):
+				scoreboard.visible = true  # Make sure scoreboard is visible for next game
 
 func setup_as_overlay():
 	# If you want the game over screen to appear as an overlay instead of replacing the scene

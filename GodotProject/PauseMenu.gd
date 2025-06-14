@@ -21,6 +21,10 @@ const LANDING_PAGE_SCENE = "res://ModeSelection.tscn"
 # Game mode detection
 var is_height_challenge: bool = false
 
+var button_original_scales: Dictionary = {}
+var button_hover_tweens: Dictionary = {}
+var button_click_tweens: Dictionary = {}
+
 func _ready():
 	# Validate that all required nodes exist
 	if not validate_nodes():
@@ -70,15 +74,53 @@ func validate_nodes() -> bool:
 	return true
 
 func connect_button_signals():
-	# Connect hover and press effects for all buttons
+	# Store original scales for all buttons
 	var buttons = [restart_button, menu_button, x_button]
 	
 	for button in buttons:
 		if button:
+			button_original_scales[button] = button.scale
+			
+			# Connect press/release signals for click effects
 			button.button_down.connect(func(): _on_button_pressed(button))
 			button.button_up.connect(func(): _on_button_released(button))
-			button.mouse_entered.connect(_on_button_hover)
-			button.mouse_exited.connect(_on_button_unhover)
+			
+			# Connect hover signals for hover effects (all buttons get hover effects now)
+			button.mouse_entered.connect(func(): _on_button_hover_enter(button))
+			button.mouse_exited.connect(func(): _on_button_hover_exit(button))
+
+# Hover effects (for all buttons)
+func _on_button_hover_enter(button: TextureButton):
+	# Cancel any existing hover tween for this button
+	if button_hover_tweens.has(button) and button_hover_tweens[button]:
+		button_hover_tweens[button].kill()
+	
+	# Create new tween for hover effect
+	button_hover_tweens[button] = create_tween()
+	button_hover_tweens[button].set_parallel(true)
+	
+	# Scale up and brighten on hover
+	var original_scale = button_original_scales[button]
+	var target_scale = original_scale * 1.03
+	button_hover_tweens[button].tween_property(button, "scale", target_scale, 0.1)
+	button_hover_tweens[button].tween_property(button, "modulate", Color(1.2, 1.2, 1.2, 1.0), 0.1)
+	
+	# Play hover sound
+	play_hover_sound()
+
+func _on_button_hover_exit(button: TextureButton):
+	# Cancel any existing hover tween for this button
+	if button_hover_tweens.has(button) and button_hover_tweens[button]:
+		button_hover_tweens[button].kill()
+	
+	# Create new tween to return to original state
+	button_hover_tweens[button] = create_tween()
+	button_hover_tweens[button].set_parallel(true)
+	
+	# Scale back to original size and normal color
+	var original_scale = button_original_scales[button]
+	button_hover_tweens[button].tween_property(button, "scale", original_scale, 0.1)
+	button_hover_tweens[button].tween_property(button, "modulate", Color.WHITE, 0.1)
 
 func detect_game_mode():
 	# Try to detect from current scene
@@ -133,21 +175,40 @@ func animate_entrance():
 
 # Button interaction functions
 func _on_button_pressed(button: TextureButton):
-	# Create a press animation
-	var press_tween = create_tween()
-	var original_modulate = button.modulate
-	press_tween.tween_property(button, "modulate", Color(0.8, 0.8, 0.8, 1.0), 0.1)
-	press_tween.tween_property(button, "modulate", original_modulate, 0.1)
+	# Cancel any existing click tween for this button
+	if button_click_tweens.has(button) and button_click_tweens[button]:
+		button_click_tweens[button].kill()
+	
+	# Create new tween for press effect
+	button_click_tweens[button] = create_tween()
+	button_click_tweens[button].set_parallel(true)
+	
+	# Scale down slightly on click (no color change)
+	var original_scale = button_original_scales[button]
+	var pressed_scale = original_scale * 0.95
+	button_click_tweens[button].tween_property(button, "scale", pressed_scale, 0.03)
 
 func _on_button_released(button: TextureButton):
-	# No special release animation needed
-	pass
-
-func _on_button_hover():
-	play_hover_sound()
-
-func _on_button_unhover():
-	pass
+	# Cancel any existing click tween for this button
+	if button_click_tweens.has(button) and button_click_tweens[button]:
+		button_click_tweens[button].kill()
+	
+	# Create new tween for release effect
+	button_click_tweens[button] = create_tween()
+	button_click_tweens[button].set_parallel(true)
+	
+	# Determine target scale and color based on whether mouse is still hovering
+	var target_scale = button_original_scales[button]
+	var target_color = Color.WHITE
+	
+	if button.is_hovered():
+		# Mouse is still over the button, return to hover state
+		target_scale = button_original_scales[button] * 1.03
+		target_color = Color(1.2, 1.2, 1.2, 1.0)
+	
+	# Return to appropriate scale and color
+	button_click_tweens[button].tween_property(button, "scale", target_scale, 0.1)
+	button_click_tweens[button].tween_property(button, "modulate", target_color, 0.1)
 
 # Button action functions
 func _on_x_button_pressed():

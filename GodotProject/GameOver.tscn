@@ -73,9 +73,9 @@ texture_normal = ExtResource("5_rr04i")
 
 [node name="LeaveButtonContainer" type="VBoxContainer" parent="."]
 layout_mode = 0
-offset_left = 285.0
+offset_left = 288.0
 offset_top = 1103.0
-offset_right = 1905.0
+offset_right = 1908.0
 offset_bottom = 1853.0
 scale = Vector2(0.0836657, 0.0803381)
 

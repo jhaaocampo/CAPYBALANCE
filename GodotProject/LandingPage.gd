@@ -13,6 +13,7 @@ extends Control
 # Animation variables
 var start_pulse_tween: Tween
 var leave_pulse_tween: Tween
+var logo_tilt_tween: Tween
 
 # Leave scene overlay reference
 var leave_scene_instance: Control = null
@@ -42,6 +43,7 @@ func _ready():
 	# Start the pulsing animations for both buttons
 	start_pulse_animation()
 	leave_pulse_animation()
+	logo_tilt_animation()
 
 # Pulsing animation functions
 func start_pulse_animation():
@@ -67,6 +69,22 @@ func leave_pulse_animation():
 	# Set easing for smoother animation
 	leave_pulse_tween.set_ease(Tween.EASE_IN_OUT)
 	leave_pulse_tween.set_trans(Tween.TRANS_SINE)
+	
+func logo_tilt_animation():
+	if logo_tilt_tween:
+		logo_tilt_tween.kill()
+	
+	logo_tilt_tween = create_tween()
+	logo_tilt_tween.set_loops() # Infinite loop
+	
+	# Tilt side to side
+	logo_tilt_tween.tween_property(logo, "rotation", deg_to_rad(1), 0.6)
+	logo_tilt_tween.tween_property(logo, "rotation", deg_to_rad(-1), 1.2)
+	logo_tilt_tween.tween_property(logo, "rotation", 0.0, 0.6)
+	
+	# Set easing for smoother animation
+	logo_tilt_tween.set_ease(Tween.EASE_IN_OUT)
+	logo_tilt_tween.set_trans(Tween.TRANS_SINE)
 
 # Button visual state functions
 func _on_button_pressed(button: TextureButton):
@@ -111,9 +129,7 @@ func play_hover_sound():
 func start_game_transition():
 	start_button.disabled = true
 	leave_button.disabled = true
-	var tween = create_tween()
-	tween.tween_property(self, "modulate:a", 0.0, 0.5)
-	tween.tween_callback(func(): get_tree().change_scene_to_file(GAME_SCENE))
+	get_tree().change_scene_to_file(GAME_SCENE)
 
 # Leave scene overlay functions
 func show_leave_scene():
@@ -159,6 +175,8 @@ func dim_landing_page():
 		start_pulse_tween.kill()
 	if leave_pulse_tween:
 		leave_pulse_tween.kill()
+	if logo_tilt_tween:
+		logo_tilt_tween.kill()
 	
 	# Create dimming animation
 	var dim_tween = create_tween()
@@ -191,6 +209,7 @@ func restore_landing_page():
 func restart_pulse_animations():
 	start_pulse_animation()
 	leave_pulse_animation()
+	logo_tilt_animation()  
 
 func setup_leave_scene_overlay():
 	if leave_scene_instance == null:

@@ -26,9 +26,9 @@ offset_bottom = 40.0
 
 [node name="Label" type="Label" parent="GameModeText"]
 layout_mode = 0
-offset_left = 35.0
+offset_left = 42.0
 offset_top = 618.0
-offset_right = 1025.0
+offset_right = 1032.0
 offset_bottom = 767.0
 scale = Vector2(0.651614, 0.651361)
 theme_override_colors/font_color = Color(1, 0.788235, 0.0823529, 1)
@@ -36,6 +36,8 @@ theme_override_colors/font_shadow_color = Color(0.568973, 0.568973, 0.568973, 1)
 theme_override_fonts/font = ExtResource("8_3e2kj")
 theme_override_font_sizes/font_size = 90
 text = "SELECT MODE"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Background" type="TextureRect" parent="."]
 z_index = -1
@@ -43,9 +45,10 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -6.0
-offset_right = 251.0
-offset_bottom = 420.0
+offset_left = -1.0
+offset_top = 1.0
+offset_right = 256.0
+offset_bottom = 421.0
 grow_horizontal = 2
 grow_vertical = 2
 scale = Vector2(0.739095, 0.751704)

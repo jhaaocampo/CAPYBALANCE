@@ -11,15 +11,18 @@ extends Control
 @onready var landing_page_music = $LandingPageMusic
 @onready var button_sound = $ButtonSound
 @onready var mute: bool = false
+@onready var logo = $Logo
 
 # Animation variables
 var height_pulse_tween: Tween
 var endless_pulse_tween: Tween
+var logo_tilt_tween: Tween
 
 # Scene paths
 const HEIGHT_CHALLENGE_SCENE = "res://HeightChallenge.tscn"
 const ENDLESS_STACK_SCENE = "res://Main.tscn"
 const LANDING_PAGE_SCENE = "res://LandingPage.tscn"
+const LOADING_SCENE = "res://LoadingScreen.tscn"
 
 func _ready():
 	landing_page_music.play()
@@ -52,6 +55,7 @@ func _ready():
 	# Start the pulsing animations for both mode buttons simultaneously
 	start_height_pulse_animation()
 	start_endless_pulse_animation()
+	logo_tilt_animation()
 
 # Pulsing animation functions
 func start_height_pulse_animation():
@@ -84,6 +88,22 @@ func start_endless_pulse_animation():
 	# Set easing for smoother animation
 	endless_pulse_tween.set_ease(Tween.EASE_IN_OUT)
 	endless_pulse_tween.set_trans(Tween.TRANS_SINE)
+	
+func logo_tilt_animation():
+	if logo_tilt_tween:
+		logo_tilt_tween.kill()
+	
+	logo_tilt_tween = create_tween()
+	logo_tilt_tween.set_loops() # Infinite loop
+	
+	# Tilt side to side
+	logo_tilt_tween.tween_property(logo, "rotation", deg_to_rad(1), 0.6)
+	logo_tilt_tween.tween_property(logo, "rotation", deg_to_rad(-1), 1.2)
+	logo_tilt_tween.tween_property(logo, "rotation", 0.0, 0.6)
+	
+	# Set easing for smoother animation
+	logo_tilt_tween.set_ease(Tween.EASE_IN_OUT)
+	logo_tilt_tween.set_trans(Tween.TRANS_SINE)
 
 # Button visual state functions
 func _on_button_pressed(button: TextureButton):
@@ -152,9 +172,11 @@ func start_game_transition(scene_path: String):
 	endless_stack_button.disabled = true
 	back_button.disabled = true
 	
-	var tween = create_tween()
-	tween.tween_property(self, "modulate:a", 0.0, 0.5)
-	tween.tween_callback(func(): get_tree().change_scene_to_file(scene_path))
+	# Store the target scene in the scene tree's meta data
+	get_tree().set_meta("target_scene", scene_path)
+	
+	# Go directly to loading screen without fade transition
+	get_tree().change_scene_to_file(LOADING_SCENE)
 
 func go_back_to_landing():
 	# Disable all buttons during transition
@@ -162,6 +184,4 @@ func go_back_to_landing():
 	endless_stack_button.disabled = true
 	back_button.disabled = true
 	
-	var tween = create_tween()
-	tween.tween_property(self, "modulate:a", 0.0, 0.3)
-	tween.tween_callback(func(): get_tree().change_scene_to_file(LANDING_PAGE_SCENE))
+	get_tree().change_scene_to_file(LANDING_PAGE_SCENE)

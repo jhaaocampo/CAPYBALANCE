@@ -21,7 +21,6 @@ extends Control
 # Animation variables
 var replay_pulse_tween: Tween
 var leave_pulse_tween: Tween
-var stats_animation_tween: Tween
 
 # Scene paths
 const ENDLESS_STACK_SCENE = "res://Main.tscn"
@@ -227,10 +226,10 @@ func setup_display():
 		if highest_stack_label:
 			highest_stack_label.text = "HIGHEST STACK"
 	
-	# Highlight new record
+	# Highlight new record - SIMPLIFIED: Just change color, no animation
 	if is_new_record and game_over_label and highest_stack_score:
 		highest_stack_score.modulate = Color.GOLD
-		# Add "NEW RECORD!" text or effect
+		# Add "NEW RECORD!" text
 		game_over_label.text = "NEW RECORD!"
 		game_over_label.modulate = Color.GOLD
 		play_high_score_sound()
@@ -273,55 +272,60 @@ func start_leave_pulse_animation():
 	leave_pulse_tween.set_ease(Tween.EASE_IN_OUT)
 	leave_pulse_tween.set_trans(Tween.TRANS_SINE)
 
+# LIVELY: Slide-in entrance animation that avoids text duplication
 func animate_entrance():
 	# Check if nodes exist before animating
 	if not game_over_label or not stats_container or not replay_button or not leave_button:
 		push_error("Game Over Scene: Cannot animate, missing UI nodes!")
 		return
 	
-	# Start with everything invisible/scaled down
-	game_over_label.modulate.a = 0.0
-	stats_container.scale = Vector2.ZERO
-	replay_button.modulate.a = 0.0
-	leave_button.modulate.a = 0.0
+	# Get original positions
+	var original_game_over_pos = game_over_label.position
+	var original_stats_pos = stats_container.position
+	var original_replay_pos = replay_button.position
+	var original_leave_pos = leave_button.position
+	
+	# Set starting positions (slide from different directions)
+	game_over_label.position.y = original_game_over_pos.y - 200  # Slide from top
+	stats_container.position.x = original_stats_pos.x - 300      # Slide from left  
+	replay_button.position.x = original_replay_pos.x - 200      # Slide from left
+	leave_button.position.x = original_leave_pos.x + 200        # Slide from right
+	
+	# Make everything visible but offset
+	game_over_label.modulate.a = 1.0
+	stats_container.modulate.a = 1.0
+	replay_button.modulate.a = 1.0
+	leave_button.modulate.a = 1.0
 	
 	var entrance_tween = create_tween()
 	entrance_tween.set_parallel(true)
 	
-	# Fade in game over label
-	entrance_tween.tween_property(game_over_label, "modulate:a", 1.0, 0.5)
+	# Slide everything into place with bouncy easing - FASTER timing
+	entrance_tween.tween_property(game_over_label, "position", original_game_over_pos, 0.4)
+	entrance_tween.tween_property(stats_container, "position", original_stats_pos, 0.3)
+	entrance_tween.tween_property(replay_button, "position", original_replay_pos, 0.35)
+	entrance_tween.tween_property(leave_button, "position", original_leave_pos, 0.35)
 	
-	# Scale in stats container with delay
-	entrance_tween.tween_interval(0.3)
-	entrance_tween.tween_property(stats_container, "scale", Vector2.ONE, 0.4)
-	entrance_tween.tween_property(stats_container, "scale", Vector2(1.1, 1.1), 0.1)
-	entrance_tween.tween_property(stats_container, "scale", Vector2.ONE, 0.1)
+	# Set bouncy easing for a lively effect
+	entrance_tween.set_ease(Tween.EASE_OUT)
+	entrance_tween.set_trans(Tween.TRANS_BACK)
 	
-	# Fade in buttons with delay
-	entrance_tween.tween_interval(0.3)
-	entrance_tween.tween_property(replay_button, "modulate:a", 1.0, 0.3)
-	entrance_tween.tween_property(leave_button, "modulate:a", 1.0, 0.3)
-	
-	# If new record, add special effect
-	if is_new_record:
-		entrance_tween.finished.connect(animate_new_record)
+	# Add a subtle scale bounce at the end for extra liveliness
+	entrance_tween.finished.connect(add_bounce_finish)
 
-func animate_new_record():
-	if not highest_stack_score:
+# NEW: Add a subtle bounce finish for extra liveliness
+func add_bounce_finish():
+	if not stats_container:
 		return
-	play_high_score_sound()
-	# Special animation for new record
-	var record_tween = create_tween()
-	record_tween.set_loops(3)
-	record_tween.set_parallel(true)
 	
-	# Pulse the highest stack score
-	record_tween.tween_property(highest_stack_score, "scale", Vector2(1.2, 1.2), 0.3)
-	record_tween.tween_property(highest_stack_score, "scale", Vector2.ONE, 0.3)
-	
-	# Flash between gold and white
-	record_tween.tween_property(highest_stack_score, "modulate", Color.WHITE, 0.3)
-	record_tween.tween_property(highest_stack_score, "modulate", Color.GOLD, 0.3)
+	# Quick subtle bounce for the stats container only (avoids text duplication)
+	var bounce_tween = create_tween()
+	bounce_tween.tween_property(stats_container, "scale", Vector2(1.05, 1.05), 0.1)
+	bounce_tween.tween_property(stats_container, "scale", Vector2.ONE, 0.15)
+	bounce_tween.set_ease(Tween.EASE_OUT)
+	bounce_tween.set_trans(Tween.TRANS_ELASTIC)
+
+# REMOVED: animate_new_record() function - no special score animations
 
 # UPDATED: Enhanced button interaction functions (matching LandingPage style)
 func _on_button_pressed(button: TextureButton):

@@ -1,0 +1,78 @@
+[gd_scene load_steps=8 format=3 uid="uid://dio66r5h6282k"]
+
+[ext_resource type="Texture2D" uid="uid://bc3yiesalklmd" path="res://Background.png" id="1_fe6hs"]
+[ext_resource type="Script" uid="uid://cm74rd08yc1w2" path="res://LandingPage.gd" id="1_ur3vi"]
+[ext_resource type="Texture2D" uid="uid://k0dctlkvytgf" path="res://capybalancelogo.png" id="2_ur3vi"]
+[ext_resource type="Texture2D" uid="uid://qtpr141yk62m" path="res://start button.png" id="3_ar278"]
+[ext_resource type="AudioStream" uid="uid://cgkgtfkcmhgv2" path="res://Audio Asset/click button.mp3" id="3_l42u6"]
+[ext_resource type="Texture2D" uid="uid://vxtgskqapp4e" path="res://leave button.png" id="4_l42u6"]
+[ext_resource type="AudioStream" uid="uid://4a16lvyoxji8" path="res://Audio Asset/starting menu screen.mp3" id="7_ar278"]
+
+[node name="LandingPage" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ur3vi")
+
+[node name="LandingPageMusic" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("7_ar278")
+volume_db = 5.333
+parameters/looping = true
+
+[node name="ButtonSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("3_l42u6")
+
+[node name="Background" type="TextureRect" parent="."]
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -1.0
+offset_top = 1.0
+offset_right = 256.0
+offset_bottom = 421.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.739095, 0.751704)
+texture = ExtResource("1_fe6hs")
+expand_mode = 3
+
+[node name="Logo" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = -5.0
+offset_top = 11.0
+offset_right = 2020.0
+offset_bottom = 2036.0
+scale = Vector2(0.355578, 0.334725)
+texture = ExtResource("2_ur3vi")
+
+[node name="StartButtonContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 140.0
+offset_top = 709.0
+offset_right = 1760.0
+offset_bottom = 2329.0
+scale = Vector2(0.264258, 0.205908)
+theme_override_constants/separation = 30
+
+[node name="StartButton" type="TextureButton" parent="StartButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+texture_normal = ExtResource("3_ar278")
+
+[node name="LeaveButtonContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 221.0
+offset_top = 887.0
+offset_right = 1841.0
+offset_bottom = 1637.0
+scale = Vector2(0.17168, 0.147613)
+
+[node name="LeaveButton" type="TextureButton" parent="LeaveButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+texture_normal = ExtResource("4_l42u6")

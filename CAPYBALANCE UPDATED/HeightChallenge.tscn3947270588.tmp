@@ -1,0 +1,71 @@
+[gd_scene load_steps=13 format=3 uid="uid://cbrvflmf8vyoj"]
+
+[ext_resource type="Script" uid="uid://ojshp1ns4j4f" path="res://HeightChallenge.gd" id="1_nowsr"]
+[ext_resource type="PackedScene" uid="uid://2qv47ukpm61l" path="res://UI.tscn" id="2_4337q"]
+[ext_resource type="Script" uid="uid://dgtvbxi01c25g" path="res://InfiniteBackground.gd" id="3_jcm3x"]
+[ext_resource type="Texture2D" uid="uid://b6qyyffqt2qd1" path="res://Backgorunds (1).png" id="4_4337q"]
+[ext_resource type="Script" uid="uid://saiprccofypw" path="res://StarSpawner.gd" id="5_jcm3x"]
+[ext_resource type="AudioStream" uid="uid://6ge2nys86665" path="res://Audio Asset/bgm (height).mp3" id="6_dht4p"]
+[ext_resource type="AudioStream" uid="uid://b6sue4swbduw4" path="res://Audio Asset/capybara drop.mp3" id="7_idb64"]
+[ext_resource type="AudioStream" uid="uid://d0o648a2xgyf4" path="res://Audio Asset/capybara landing (normal).mp3" id="8_beyd8"]
+[ext_resource type="AudioStream" uid="uid://b8rshxa7iju0n" path="res://Audio Asset/capybara landing (baby).mp3" id="9_mengq"]
+[ext_resource type="AudioStream" uid="uid://b8p7kqs872n0b" path="res://Audio Asset/capybara landing (large).mp3" id="10_6e3hg"]
+[ext_resource type="AudioStream" uid="uid://dmcms8uic7l3n" path="res://Audio Asset/capybara landing (sleepy).mp3" id="11_7mhb4"]
+[ext_resource type="AudioStream" uid="uid://csecuggw6dws4" path="res://Audio Asset/5 seconds left timer (height challenge).mp3" id="12_20rbl"]
+
+[node name="HeightChallenge" type="Node2D"]
+script = ExtResource("1_nowsr")
+challenge_duration = null
+capy_height = null
+spawn_delay = null
+ground_margin = null
+move_speed = null
+max_horizontal_movement = null
+base_capy_count_threshold = null
+foundation_stability_multiplier = null
+height_scaling_factor = null
+compression_strength = null
+foundation_mass_scaling = null
+ui_exclusion_zone_height = null
+
+[node name="UI" parent="." instance=ExtResource("2_4337q")]
+
+[node name="ParallaxBackground" type="ParallaxBackground" parent="."]
+script = ExtResource("3_jcm3x")
+
+[node name="ParallaxLayer" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_scale = Vector2(1, 0.8)
+
+[node name="Backgorunds" type="Sprite2D" parent="ParallaxBackground/ParallaxLayer"]
+position = Vector2(359.973, -1089)
+scale = Vector2(0.486159, 0.565008)
+texture = ExtResource("4_4337q")
+
+[node name="ParallaxLayer_Space" type="ParallaxLayer" parent="ParallaxBackground"]
+
+[node name="StarSpawner" type="Node2D" parent="ParallaxBackground/ParallaxLayer_Space"]
+script = ExtResource("5_jcm3x")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(357, 642)
+
+[node name="HeightChallengeBGM" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("6_dht4p")
+
+[node name="DropSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("7_idb64")
+
+[node name="NormalCapySound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("8_beyd8")
+
+[node name="BabyCapySound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("9_mengq")
+
+[node name="LargeCapySound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("10_6e3hg")
+
+[node name="SleepyCapySound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("11_7mhb4")
+
+[node name="FiveSecondWarning" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("12_20rbl")

@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://cxi5olo77me7a"]
+[gd_scene load_steps=7 format=3 uid="uid://cxi5olo77me7a"]
 
 [ext_resource type="Script" uid="uid://j8d4thk6gjcw" path="res://LeaveScene.gd" id="1_tfw3m"]
 [ext_resource type="Texture2D" uid="uid://d3wot3t2r31c7" path="res://Gameover box.png" id="1_xdtwo"]
 [ext_resource type="FontFile" uid="uid://dv6rxjsqf5lyn" path="res://PressStart2P.ttf" id="2_tfw3m"]
 [ext_resource type="Texture2D" uid="uid://b64lkjhtkmkqr" path="res://Yes button.png" id="3_6eur0"]
 [ext_resource type="Texture2D" uid="uid://dfp5m8yjltj2i" path="res://No button.png" id="4_5bggv"]
+[ext_resource type="AudioStream" uid="uid://cgkgtfkcmhgv2" path="res://Audio Asset/click button.mp3" id="6_6eur0"]
 
 [node name="LeaveScene" type="Control"]
 layout_mode = 3
@@ -93,3 +94,6 @@ scale = Vector2(0.0836657, 0.0803381)
 layout_mode = 2
 size_flags_horizontal = 4
 texture_normal = ExtResource("4_5bggv")
+
+[node name="ButtonSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("6_6eur0")

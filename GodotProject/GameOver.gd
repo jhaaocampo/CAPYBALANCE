@@ -15,7 +15,7 @@ extends Control
 @onready var high_score_sound = $HighScoreSound
 @onready var leaving_sound = $LeavingSound
 @onready var button_sound = $ButtonSound
-
+@onready var regular_game_over_sound = $RegularGameOverSound 
 @onready var mute: bool = false
 
 # Animation variables
@@ -108,6 +108,10 @@ func play_leaving_sound():
 func play_button_sound():
 	if not mute and button_sound:
 		button_sound.play()
+		
+func play_regular_game_over_sound():
+	if not mute and regular_game_over_sound:
+		regular_game_over_sound.play()
 
 func validate_nodes() -> bool:
 	# Check if all critical nodes exist
@@ -233,7 +237,8 @@ func setup_display():
 		game_over_label.text = "NEW RECORD!"
 		game_over_label.modulate = Color.GOLD
 		play_high_score_sound()
-
+	else:
+		play_regular_game_over_sound()  
 # UPDATED: Enhanced pulsing animation functions (similar to LandingPage)
 func start_replay_pulse_animation():
 	if not replay_button:

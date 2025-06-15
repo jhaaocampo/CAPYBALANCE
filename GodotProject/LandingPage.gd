@@ -8,8 +8,8 @@ extends Control
 @onready var background = $Background
 @onready var landing_page_music = $LandingPageMusic
 @onready var button_sound = $ButtonSound
-# Audio mute flag
 @onready var mute: bool = false
+
 # Animation variables
 var start_pulse_tween: Tween
 var leave_pulse_tween: Tween
@@ -266,12 +266,14 @@ func connect_leave_scene_signals():
 
 func _on_leave_confirmed():
 	# User confirmed they want to leave
+	play_button_sound()
 	print("Leave confirmed")
 	hide_leave_scene()
 	_quit_game()
 
 func _on_leave_cancelled():
 	# User cancelled, hide overlay and restore landing page
+	play_button_sound()
 	print("Leave cancelled")
 	hide_leave_scene()
 	# Wait a moment before restoring landing page

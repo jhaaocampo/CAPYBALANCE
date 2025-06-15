@@ -9,7 +9,7 @@ extends Control
 @onready var x_button = $CanvasLayer/XButtonContainer/XButton
 @onready var backgrounds = $Backgrounds
 @onready var button_sound = $ButtonSound
-
+@onready var mute: bool = false
 # Volume state
 var volume_enabled: bool = true
 

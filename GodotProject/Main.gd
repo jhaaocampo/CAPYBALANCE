@@ -23,6 +23,8 @@ extends Node2D
 @onready var game_over_sound = $GameOverSound
 @export var ui_exclusion_zone_height := 220.0
 
+@onready var ground_body = $Ground
+
 
 # References
 var current_capy = null
@@ -32,7 +34,6 @@ var moving_right := true
 var capys_stack := []
 var start_x_position := 0.0
 var is_capy_dropping := false
-var ground_body = null
 var wobble_time := 0.0
 var stack_balance_factor := 0.0
 var stack_height := 0
@@ -66,12 +67,31 @@ var game_over_scene_instance = null
 
 func _ready():
 	randomize()
-	ground_level = get_viewport_rect().size.y - ground_margin
+	# Calculate ground level from the actual Ground node position
+	ground_body = $Ground  # Make sure we have the reference
+	if ground_body:
+		# Get the top surface of the ground collision shape
+		var collision_shape = ground_body.get_node("CollisionShape2D")
+		if collision_shape and collision_shape.shape:
+			var shape = collision_shape.shape as RectangleShape2D
+			if shape:
+				# Ground level is the top of the ground body
+				ground_level = ground_body.global_position.y - (shape.size.y / 2)
+			else:
+				# Fallback if shape is not RectangleShape2D
+				ground_level = ground_body.global_position.y
+		else:
+			# Fallback if no collision shape found
+			ground_level = ground_body.global_position.y
+	else:
+		# Fallback to original calculation if Ground node not found
+		ground_level = get_viewport_rect().size.y - ground_margin
+	
 	start_x_position = get_viewport_rect().size.x / 2
 	
 	setup_touch_input()
 	
-	create_ground()
+	# create_ground()  # Remove this line
 	place_base_capy()
 	setup_initial_camera()
 	setup_scoreboard()
@@ -126,19 +146,6 @@ func place_base_capy():
 	current_capy = base_capy
 	is_capy_dropping = true
 
-func create_ground():
-	ground_body = StaticBody2D.new()
-	ground_body.position = Vector2(get_viewport_rect().size.x / 2, ground_level + 10)
-	ground_body.collision_layer = 1
-	ground_body.collision_mask = 1
-	add_child(ground_body)
-	
-	var ground_shape = CollisionShape2D.new()
-	var shape = RectangleShape2D.new()
-	shape.size = Vector2(get_viewport_rect().size.x, 20)
-	ground_shape.shape = shape
-	ground_body.add_child(ground_shape)
-
 func is_contacting_something(rb):
 	for contact_body in rb.get_colliding_bodies():
 		if contact_body == ground_body:
@@ -146,6 +153,7 @@ func is_contacting_something(rb):
 		if find_capy_owner(contact_body) in capys_stack:
 			return true
 	
+	# Use the calculated ground_level for ground contact detection
 	var capy_bottom = rb.global_position.y + (capy_height * 0.4)
 	return capy_bottom >= ground_level - 5.0  # Small tolerance for ground contact
 

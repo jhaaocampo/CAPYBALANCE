@@ -45,10 +45,10 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -1.0
-offset_top = 1.0
-offset_right = 256.0
-offset_bottom = 421.0
+offset_left = -62.0
+offset_top = -40.0
+offset_right = 371.0
+offset_bottom = 566.0
 grow_horizontal = 2
 grow_vertical = 2
 scale = Vector2(0.739095, 0.751704)
@@ -56,6 +56,7 @@ texture = ExtResource("1_iynnj")
 expand_mode = 3
 
 [node name="Logo" type="TextureRect" parent="."]
+layout_mode = 0
 offset_left = 17.0
 offset_top = 155.0
 offset_right = 1932.0

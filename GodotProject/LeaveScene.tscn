@@ -56,9 +56,9 @@ offset_bottom = 191.0
 [node name="AreYouSure" type="Label" parent="AreYouSureText"]
 layout_mode = 0
 offset_left = 54.0
-offset_top = 470.0
+offset_top = 494.0
 offset_right = 1044.0
-offset_bottom = 619.0
+offset_bottom = 643.0
 scale = Vector2(0.651614, 0.651361)
 theme_override_colors/font_color = Color(0.403922, 0.231373, 0.027451, 1)
 theme_override_constants/line_spacing = 25
@@ -70,11 +70,11 @@ horizontal_alignment = 1
 
 [node name="NoButtonContainer" type="VBoxContainer" parent="."]
 layout_mode = 0
-offset_left = 230.0
-offset_top = 758.0
-offset_right = 1985.0
-offset_bottom = 2378.0
-scale = Vector2(0.139891, 0.11173)
+offset_left = 215.0
+offset_top = 754.0
+offset_right = 1970.0
+offset_bottom = 2374.0
+scale = Vector2(0.165, 0.132)
 theme_override_constants/separation = 30
 
 [node name="NoButton" type="TextureButton" parent="NoButtonContainer"]
@@ -84,11 +84,11 @@ texture_normal = ExtResource("3_6eur0")
 
 [node name="YesButtonContainer" type="VBoxContainer" parent="."]
 layout_mode = 0
-offset_left = 285.0
-offset_top = 852.0
-offset_right = 2040.0
-offset_bottom = 1665.0
-scale = Vector2(0.0836657, 0.0803381)
+offset_left = 265.0
+offset_top = 864.0
+offset_right = 2020.0
+offset_bottom = 1677.0
+scale = Vector2(0.114, 0.109)
 
 [node name="YesButton" type="TextureButton" parent="YesButtonContainer"]
 layout_mode = 2

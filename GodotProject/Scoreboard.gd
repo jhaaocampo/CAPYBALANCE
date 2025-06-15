@@ -10,6 +10,9 @@ extends Control
 # Volume state
 var volume_enabled: bool = true
 
+# Game state
+var game_over_state: bool = false
+
 # Game mode detection
 enum GameMode { STACKING, HEIGHT_CHALLENGE }
 
@@ -35,7 +38,6 @@ var pause_button_original_scale: Vector2
 var pause_button_hover_tween: Tween
 var pause_button_click_tween: Tween
 
-
 func _ready():
 	# Store the original position of the high score label
 	if high_score_label:
@@ -48,6 +50,29 @@ func _ready():
 	setup_pause_button()
 	update_display()
 	connect_to_game_signals()
+
+# Game state management
+func set_game_over(is_game_over: bool):
+	game_over_state = is_game_over
+	update_ui_button_states()
+
+func update_ui_button_states():
+	# Disable/enable buttons based on game state
+	if volume_button:
+		volume_button.disabled = game_over_state
+		# Visual feedback for disabled state
+		if game_over_state:
+			volume_button.modulate = Color(0.5, 0.5, 0.5, 0.7)  # Grayed out
+		else:
+			volume_button.modulate = Color.WHITE
+	
+	if pause_button:
+		pause_button.disabled = game_over_state
+		# Visual feedback for disabled state
+		if game_over_state:
+			pause_button.modulate = Color(0.5, 0.5, 0.5, 0.7)  # Grayed out
+		else:
+			pause_button.modulate = Color.WHITE
 
 # Position adjustment for HighScore label based on game mode
 func adjust_high_score_position():
@@ -69,6 +94,9 @@ func setup_volume_button():
 		volume_button.pressed.connect(_on_volume_button_pressed)
 
 func _on_volume_button_pressed():
+	# Don't process if game is over or button is disabled
+	if game_over_state or volume_button.disabled:
+		return
 	toggle_volume()
 
 func toggle_volume():
@@ -163,6 +191,9 @@ func _process(delta):
 				var time_remaining = main_node.get("time_remaining")
 				if time_remaining != null:
 					update_countdown_timer(time_remaining)
+					# Check if time ran out and disable buttons
+					if time_remaining <= 0 and challenge_active:
+						set_game_over(true)
 
 func update_current_height():
 	var main_node = get_node("/root/Main")
@@ -218,6 +249,7 @@ func end_height_challenge(final_height: int, best: int):
 	challenge_active = false
 	current_height = final_height
 	best_height = best
+	set_game_over(true)  # Disable UI buttons when height challenge ends
 	save_high_scores()
 	update_display()
 	animate_challenge_complete()
@@ -247,7 +279,21 @@ func add_score(points: int):
 func game_over():
 	if current_game_mode == GameMode.STACKING:
 		# Standard game over for stacking mode
+		set_game_over(true)  # Disable UI buttons
 		update_display()
+
+# Method to reset game state (call this when starting a new game)
+func reset_game_state():
+	set_game_over(false)  # Re-enable UI buttons
+	reset_score()
+
+# Method to start a new height challenge
+func start_new_height_challenge():
+	set_game_over(false)  # Re-enable UI buttons
+	challenge_active = true
+	current_height = 0
+	time_remaining = countdown_duration
+	update_display()
 
 # Display updates
 func update_display():
@@ -431,6 +477,10 @@ func setup_pause_button():
 
 # Hover effects
 func _on_pause_button_hover_enter():
+	# Don't play sound if button is disabled
+	if game_over_state or pause_button.disabled:
+		return
+	
 	# Play UI sound if volume is enabled
 	if volume_enabled:
 		play_ui_sound()
@@ -441,6 +491,10 @@ func _on_pause_button_hover_exit():
 
 # Click effects
 func _on_pause_button_down():
+	# Don't process if game is over or button is disabled
+	if game_over_state or pause_button.disabled:
+		return
+	
 	# Cancel any existing click tween
 	if pause_button_click_tween:
 		pause_button_click_tween.kill()
@@ -455,6 +509,10 @@ func _on_pause_button_down():
 	pause_button_click_tween.tween_property(pause_button, "modulate", Color(1.3, 1.3, 1.3, 1.0), 0.05)
 
 func _on_pause_button_up():
+	# Don't process if game is over or button is disabled
+	if game_over_state or pause_button.disabled:
+		return
+	
 	# Cancel any existing click tween
 	if pause_button_click_tween:
 		pause_button_click_tween.kill()
@@ -469,6 +527,9 @@ func _on_pause_button_up():
 
 # Your existing pause function remains the same
 func _on_pause_button_pressed():
+	# Don't process if game is over or button is disabled
+	if game_over_state or pause_button.disabled:
+		return
 	pause_game()
 
 func pause_game():

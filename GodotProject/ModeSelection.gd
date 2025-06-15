@@ -6,7 +6,7 @@ extends Control
 @onready var height_challenge_button = $HeightChallengeButtonContainer/HeightChallengeButton
 @onready var endless_stack_button = $EndlessStackButtonContainer/EndlessStackButton
 @onready var back_button = $BackButtonContainer/BackButton
-@onready var title_label = $TitleLabel
+@onready var title_label = $GameModeText/Label
 @onready var background = $Background
 @onready var landing_page_music = $LandingPageMusic
 @onready var button_sound = $ButtonSound
@@ -22,7 +22,13 @@ var logo_tilt_tween: Tween
 const HEIGHT_CHALLENGE_SCENE = "res://HeightChallenge.tscn"
 const ENDLESS_STACK_SCENE = "res://Main.tscn"
 const LANDING_PAGE_SCENE = "res://LandingPage.tscn"
-const LOADING_SCENE = "res://LoadingScreen.tscn"
+
+# Preloaded scenes
+const HEIGHT_CHALLENGE_PACKED = preload("res://HeightChallenge.tscn")
+const ENDLESS_STACK_PACKED = preload("res://Main.tscn")
+
+# Loading state
+var is_loading = false
 
 func _ready():
 	landing_page_music.play()
@@ -119,36 +125,45 @@ func _on_button_released(button: TextureButton):
 
 # Hover functions
 func _on_button_hover():
-	play_hover_sound()
+	if not is_loading:
+		play_hover_sound()
 
 func _on_button_unhover():
 	pass
 
 func _on_back_button_hover():
-	play_hover_sound()
-	# Scale up on hover (back button doesn't have pulsing animation)
-	var hover_tween = create_tween()
-	hover_tween.tween_property(back_button, "scale", Vector2(1.1, 1.1), 0.1)
-	hover_tween.set_ease(Tween.EASE_OUT)
-	hover_tween.set_trans(Tween.TRANS_QUART)
+	if not is_loading:
+		play_hover_sound()
+		# Scale up on hover (back button doesn't have pulsing animation)
+		var hover_tween = create_tween()
+		hover_tween.tween_property(back_button, "scale", Vector2(1.1, 1.1), 0.1)
+		hover_tween.set_ease(Tween.EASE_OUT)
+		hover_tween.set_trans(Tween.TRANS_QUART)
 
 func _on_back_button_unhover():
-	# Scale back to normal
-	var unhover_tween = create_tween()
-	unhover_tween.tween_property(back_button, "scale", Vector2.ONE, 0.15)
-	unhover_tween.set_ease(Tween.EASE_OUT)
-	unhover_tween.set_trans(Tween.TRANS_QUART)
+	if not is_loading:
+		# Scale back to normal
+		var unhover_tween = create_tween()
+		unhover_tween.tween_property(back_button, "scale", Vector2.ONE, 0.15)
+		unhover_tween.set_ease(Tween.EASE_OUT)
+		unhover_tween.set_trans(Tween.TRANS_QUART)
 
 # Button action functions
 func _on_height_challenge_button_pressed():
+	if is_loading:
+		return
 	button_sound.play()
 	start_game_transition(HEIGHT_CHALLENGE_SCENE)
 
 func _on_endless_stack_button_pressed():
+	if is_loading:
+		return
 	button_sound.play()
 	start_game_transition(ENDLESS_STACK_SCENE)
 
 func _on_back_button_pressed():
+	if is_loading:
+		return
 	button_sound.play()
 	go_back_to_landing()
 
@@ -165,23 +180,70 @@ func play_hover_sound():
 	# Add your audio logic here
 	pass
 
+# Loading state management
+func enter_loading_state():
+	is_loading = true
+	
+	# Stop all animations
+	if height_pulse_tween:
+		height_pulse_tween.kill()
+	if endless_pulse_tween:
+		endless_pulse_tween.kill()
+	if logo_tilt_tween:
+		logo_tilt_tween.kill()
+	
+	# Hide UI elements (keep logo visible)
+	height_challenge_button.visible = false
+	endless_stack_button.visible = false
+	back_button.visible = false
+	
+	# Change label text to "Balancing..."
+	title_label.text = "Balancing..."
+	
+	# Disable all buttons
+	height_challenge_button.disabled = true
+	endless_stack_button.disabled = true
+	back_button.disabled = true
+
 # Scene transition functions
 func start_game_transition(scene_path: String):
-	# Disable all buttons during transition
-	height_challenge_button.disabled = true
-	endless_stack_button.disabled = true
-	back_button.disabled = true
+	# Enter loading state first
+	enter_loading_state()
 	
-	# Store the target scene in the scene tree's meta data
-	get_tree().set_meta("target_scene", scene_path)
+	# Wait for the UI changes to render
+	await get_tree().process_frame
+	await get_tree().process_frame
 	
-	# Go directly to loading screen without fade transition
-	get_tree().change_scene_to_file(LOADING_SCENE)
+	# Add a small delay to make the "Balancing..." text visible
+	await get_tree().create_timer(0.1).timeout
+	
+	# Use preloaded scenes for instant transition
+	var packed_scene
+	match scene_path:
+		HEIGHT_CHALLENGE_SCENE:
+			packed_scene = HEIGHT_CHALLENGE_PACKED
+		ENDLESS_STACK_SCENE:
+			packed_scene = ENDLESS_STACK_PACKED
+	
+	if packed_scene:
+		get_tree().change_scene_to_packed(packed_scene)
+	else:
+		# Fallback to file loading if scene not found
+		get_tree().change_scene_to_file(scene_path)
+
+# Deferred scene change to avoid blink
+func _change_scene(scene_path: String):
+	get_tree().call_deferred("change_scene_to_file", scene_path)
 
 func go_back_to_landing():
+	if is_loading:
+		return
+	button_sound.play()
+	
 	# Disable all buttons during transition
 	height_challenge_button.disabled = true
 	endless_stack_button.disabled = true
 	back_button.disabled = true
 	
+	# Use file loading for landing page transition
 	get_tree().change_scene_to_file(LANDING_PAGE_SCENE)

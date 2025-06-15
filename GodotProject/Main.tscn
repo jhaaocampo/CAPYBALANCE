@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://buu6w8pk80q3f"]
+[gd_scene load_steps=15 format=3 uid="uid://buu6w8pk80q3f"]
 
 [ext_resource type="Script" uid="uid://ccy7cd22fhbj3" path="res://Main.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://2qv47ukpm61l" path="res://UI.tscn" id="2_trn2v"]
@@ -6,12 +6,14 @@
 [ext_resource type="Texture2D" uid="uid://b6qyyffqt2qd1" path="res://Backgorunds (1).png" id="4_5vvyt"]
 [ext_resource type="AudioStream" uid="uid://d0o648a2xgyf4" path="res://Audio Asset/capybara landing (normal).mp3" id="5_3dxm6"]
 [ext_resource type="Script" uid="uid://saiprccofypw" path="res://StarSpawner.gd" id="5_5vvyt"]
+[ext_resource type="Texture2D" uid="uid://c7r8poie20s40" path="res://Ground.png" id="5_c2ibq"]
 [ext_resource type="AudioStream" uid="uid://6ge2nys86665" path="res://Audio Asset/bgm (height).mp3" id="6_5vvyt"]
 [ext_resource type="AudioStream" uid="uid://b8p7kqs872n0b" path="res://Audio Asset/capybara landing (large).mp3" id="7_03owx"]
 [ext_resource type="AudioStream" uid="uid://b8rshxa7iju0n" path="res://Audio Asset/capybara landing (baby).mp3" id="8_wkp8b"]
 [ext_resource type="AudioStream" uid="uid://dmcms8uic7l3n" path="res://Audio Asset/capybara landing (sleepy).mp3" id="9_20pc6"]
 [ext_resource type="AudioStream" uid="uid://b6sue4swbduw4" path="res://Audio Asset/capybara drop.mp3" id="10_wkp8b"]
 [ext_resource type="AudioStream" uid="uid://dv20rbl4426hi" path="res://Audio Asset/game over.mp3" id="11_20pc6"]
+[ext_resource type="PackedScene" uid="uid://bun0ouvafhlsy" path="res://Ground.tscn" id="13_c6i3y"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1")
@@ -25,9 +27,21 @@ script = ExtResource("2_uu6xs")
 motion_scale = Vector2(1, 0.8)
 
 [node name="Backgorunds" type="Sprite2D" parent="ParallaxBackground/ParallaxLayer"]
-position = Vector2(359.973, -1089)
+position = Vector2(359.973, -1092)
 scale = Vector2(0.486159, 0.565008)
 texture = ExtResource("4_5vvyt")
+
+[node name="ExtendedGround" type="Sprite2D" parent="ParallaxBackground/ParallaxLayer"]
+position = Vector2(359, 1419)
+texture = ExtResource("5_c2ibq")
+
+[node name="ExtendedGround3" type="Sprite2D" parent="ParallaxBackground/ParallaxLayer"]
+position = Vector2(359, 1355)
+texture = ExtResource("5_c2ibq")
+
+[node name="ExtendedGround2" type="Sprite2D" parent="ParallaxBackground/ParallaxLayer"]
+position = Vector2(359, 1288)
+texture = ExtResource("5_c2ibq")
 
 [node name="ParallaxLayer_Space" type="ParallaxLayer" parent="ParallaxBackground"]
 
@@ -64,3 +78,6 @@ volume_db = 10.0
 [node name="GameOverSound" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("11_20pc6")
 volume_db = 9.0
+
+[node name="Ground" parent="." instance=ExtResource("13_c6i3y")]
+position = Vector2(10, 1167)

@@ -1,10 +1,11 @@
-[gd_scene load_steps=14 format=3 uid="uid://cbrvflmf8vyoj"]
+[gd_scene load_steps=16 format=3 uid="uid://cbrvflmf8vyoj"]
 
 [ext_resource type="Script" uid="uid://ojshp1ns4j4f" path="res://HeightChallenge.gd" id="1_nowsr"]
 [ext_resource type="PackedScene" uid="uid://2qv47ukpm61l" path="res://UI.tscn" id="2_4337q"]
 [ext_resource type="Script" uid="uid://dgtvbxi01c25g" path="res://InfiniteBackground.gd" id="3_jcm3x"]
 [ext_resource type="Texture2D" uid="uid://b6qyyffqt2qd1" path="res://Backgorunds (1).png" id="4_4337q"]
 [ext_resource type="Script" uid="uid://saiprccofypw" path="res://StarSpawner.gd" id="5_jcm3x"]
+[ext_resource type="Texture2D" uid="uid://c7r8poie20s40" path="res://Ground.png" id="5_mengq"]
 [ext_resource type="AudioStream" uid="uid://byg5s7qunlup2" path="res://Audio Asset/bgm (endless).mp3" id="6_idb64"]
 [ext_resource type="AudioStream" uid="uid://b6sue4swbduw4" path="res://Audio Asset/capybara drop.mp3" id="7_idb64"]
 [ext_resource type="AudioStream" uid="uid://d0o648a2xgyf4" path="res://Audio Asset/capybara landing (normal).mp3" id="8_beyd8"]
@@ -13,6 +14,7 @@
 [ext_resource type="AudioStream" uid="uid://dmcms8uic7l3n" path="res://Audio Asset/capybara landing (sleepy).mp3" id="11_7mhb4"]
 [ext_resource type="AudioStream" uid="uid://csecuggw6dws4" path="res://Audio Asset/5 seconds left timer (height challenge).mp3" id="12_20rbl"]
 [ext_resource type="AudioStream" uid="uid://dv20rbl4426hi" path="res://Audio Asset/game over.mp3" id="12_idb64"]
+[ext_resource type="PackedScene" uid="uid://bun0ouvafhlsy" path="res://Ground.tscn" id="15_6e3hg"]
 
 [node name="HeightChallenge" type="Node2D"]
 script = ExtResource("1_nowsr")
@@ -29,6 +31,18 @@ motion_scale = Vector2(1, 0.8)
 position = Vector2(359.973, -1089)
 scale = Vector2(0.486159, 0.565008)
 texture = ExtResource("4_4337q")
+
+[node name="ExtendedGround" type="Sprite2D" parent="ParallaxBackground/ParallaxLayer"]
+position = Vector2(359, 1419)
+texture = ExtResource("5_mengq")
+
+[node name="ExtendedGround3" type="Sprite2D" parent="ParallaxBackground/ParallaxLayer"]
+position = Vector2(359, 1355)
+texture = ExtResource("5_mengq")
+
+[node name="ExtendedGround2" type="Sprite2D" parent="ParallaxBackground/ParallaxLayer"]
+position = Vector2(359, 1288)
+texture = ExtResource("5_mengq")
 
 [node name="ParallaxLayer_Space" type="ParallaxLayer" parent="ParallaxBackground"]
 
@@ -68,3 +82,6 @@ volume_db = 9.0
 
 [node name="FiveSecondWarning" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("12_20rbl")
+
+[node name="Ground" parent="." instance=ExtResource("15_6e3hg")]
+position = Vector2(10, 1167)

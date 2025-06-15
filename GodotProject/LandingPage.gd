@@ -17,15 +17,28 @@ var logo_tilt_tween: Tween
 
 # Leave scene overlay reference
 var leave_scene_instance: Control = null
+
 # Scene paths
 const GAME_SCENE = "res://ModeSelection.tscn"
 const LEAVE_SCENE = "res://LeaveScene.tscn"
+
+# Preloading heavy game scenes in the background
+const HEIGHT_CHALLENGE_SCENE = "res://HeightChallenge.tscn"
+const ENDLESS_STACK_SCENE = "res://Main.tscn"
+
+# Preloaded scenes - will be shared with ModeSelection via AutoLoad
+var height_challenge_packed: PackedScene = null
+var endless_stack_packed: PackedScene = null
+var preloading_complete = false
 
 func _ready():
 	# Set this Control to fill the entire screen
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	# Play background music
 	play_music()
+	
+	# Start preloading heavy scenes immediately in background
+	start_background_preloading()
 	
 	# Connect button press signals
 	start_button.pressed.connect(_on_start_button_pressed)
@@ -44,6 +57,70 @@ func _ready():
 	start_pulse_animation()
 	leave_pulse_animation()
 	logo_tilt_animation()
+
+# Background preloading system
+func start_background_preloading():
+	print("Starting background preloading of game scenes...")
+	_load_scene_async(HEIGHT_CHALLENGE_SCENE, _on_height_challenge_loaded)
+	_load_scene_async(ENDLESS_STACK_SCENE, _on_endless_stack_loaded)
+
+func _load_scene_async(scene_path: String, callback: Callable):
+	# Use ResourceLoader to load asynchronously
+	ResourceLoader.load_threaded_request(scene_path)
+	# Check loading status periodically
+	_check_loading_status(scene_path, callback)
+
+func _check_loading_status(scene_path: String, callback: Callable):
+	var status = ResourceLoader.load_threaded_get_status(scene_path)
+	
+	match status:
+		ResourceLoader.THREAD_LOAD_LOADED:
+			var resource = ResourceLoader.load_threaded_get(scene_path)
+			callback.call(resource)
+		ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			# Still loading, check again next frame
+			call_deferred("_check_loading_status", scene_path, callback)
+		ResourceLoader.THREAD_LOAD_FAILED:
+			print("Failed to preload scene: ", scene_path)
+		ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+			print("Invalid resource: ", scene_path)
+
+func _on_height_challenge_loaded(resource: PackedScene):
+	height_challenge_packed = resource
+	print("Height Challenge scene preloaded in background")
+	# Store in singleton/autoload for ModeSelection to access
+	if has_method("store_preloaded_scene"):
+		store_preloaded_scene("height_challenge", resource)
+	_check_preloading_complete()
+
+func _on_endless_stack_loaded(resource: PackedScene):
+	endless_stack_packed = resource
+	print("Endless Stack scene preloaded in background")
+	# Store in singleton/autoload for ModeSelection to access
+	if has_method("store_preloaded_scene"):
+		store_preloaded_scene("endless_stack", resource)
+	_check_preloading_complete()
+
+func _check_preloading_complete():
+	if height_challenge_packed != null and endless_stack_packed != null:
+		preloading_complete = true
+		print("All game scenes preloaded successfully!")
+		
+		# Optional: Show a subtle indicator that preloading is complete
+		_show_preload_complete_indicator()
+
+func _show_preload_complete_indicator():
+	# Subtle visual feedback that preloading is done
+	# You could add a small dot that changes color, or make the start button glow slightly
+	var indicator_tween = create_tween()
+	indicator_tween.tween_property(start_button, "modulate", Color(1.1, 1.1, 1.1, 1.0), 0.3)
+	indicator_tween.tween_property(start_button, "modulate", Color.WHITE, 0.3)
+
+# Optional: Store preloaded scenes in an AutoLoad/Singleton
+func store_preloaded_scene(scene_name: String, scene: PackedScene):
+	# If you have a GameManager singleton, store it there:
+	# GameManager.preloaded_scenes[scene_name] = scene
+	pass
 
 # Pulsing animation functions
 func start_pulse_animation():
@@ -129,7 +206,23 @@ func play_hover_sound():
 func start_game_transition():
 	start_button.disabled = true
 	leave_button.disabled = true
+	
+	# Show loading state briefly if scenes aren't preloaded yet
+	if not preloading_complete:
+		_show_loading_feedback()
+		
+		# Wait a moment for preloading to complete
+		var wait_time = 0.0
+		while not preloading_complete and wait_time < 1.0:
+			await get_tree().create_timer(0.1).timeout
+			wait_time += 0.1
+	
 	get_tree().change_scene_to_file(GAME_SCENE)
+
+func _show_loading_feedback():
+	# Optional: Show "Loading..." text briefly
+	# You could modify the logo text or show a loading indicator
+	pass
 
 # Leave scene overlay functions
 func show_leave_scene():

@@ -31,9 +31,9 @@ texture = ExtResource("1_q775a")
 
 [node name="RestartButtonContainer" type="VBoxContainer" parent="CanvasLayer"]
 offset_left = 179.0
-offset_top = 570.0
+offset_top = 582.0
 offset_right = 1934.0
-offset_bottom = 2190.0
+offset_bottom = 2202.0
 scale = Vector2(0.203819, 0.167749)
 theme_override_constants/separation = 30
 
@@ -44,9 +44,9 @@ texture_normal = ExtResource("2_qg8xq")
 
 [node name="MenuButtonContainer" type="VBoxContainer" parent="CanvasLayer"]
 offset_left = 179.0
-offset_top = 724.0
+offset_top = 723.0
 offset_right = 1934.0
-offset_bottom = 2344.0
+offset_bottom = 2343.0
 scale = Vector2(0.203819, 0.167749)
 theme_override_constants/separation = 30
 
@@ -57,9 +57,9 @@ texture_normal = ExtResource("3_36k83")
 
 [node name="XButtonContainer" type="VBoxContainer" parent="CanvasLayer"]
 offset_left = 505.0
-offset_top = 477.0
+offset_top = 485.0
 offset_right = 2260.0
-offset_bottom = 2097.0
+offset_bottom = 2105.0
 scale = Vector2(0.0677106, 0.0641023)
 theme_override_constants/separation = 30
 
@@ -70,13 +70,13 @@ texture_normal = ExtResource("4_qg8xq")
 
 [node name="Label" type="Label" parent="CanvasLayer"]
 offset_left = 119.0
-offset_top = 481.0
+offset_top = 493.0
 offset_right = 344.0
-offset_bottom = 526.0
+offset_bottom = 538.0
 theme_override_colors/font_color = Color(0.403922, 0.231373, 0.027451, 1)
 theme_override_fonts/font = ExtResource("6_r2gvh")
 theme_override_font_sizes/font_size = 45
-text = "Oops!"
+text = "Hmm?"
 
 [node name="Backgorunds" type="Sprite2D" parent="."]
 visible = false

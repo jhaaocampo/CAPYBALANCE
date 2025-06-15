@@ -21,9 +21,9 @@ script = ExtResource("1_3b2b5")
 [node name="Stacks" type="Label" parent="Scoreboard"]
 layout_mode = 0
 offset_left = 200.0
-offset_top = 158.0
+offset_top = 147.0
 offset_right = 530.0
-offset_bottom = 293.0
+offset_bottom = 282.0
 theme_override_colors/font_color = Color(1, 0.788235, 0.0823529, 1)
 theme_override_constants/line_spacing = 25
 theme_override_fonts/font = ExtResource("2_3b2b5")
@@ -35,9 +35,9 @@ horizontal_alignment = 1
 [node name="Stacks2" type="Label" parent="Scoreboard"]
 layout_mode = 0
 offset_left = 200.0
-offset_top = 158.0
+offset_top = 147.0
 offset_right = 530.0
-offset_bottom = 293.0
+offset_bottom = 282.0
 theme_override_colors/font_color = Color(1, 0.788235, 0.0823529, 1)
 theme_override_constants/line_spacing = 25
 theme_override_fonts/font = ExtResource("2_3b2b5")
@@ -48,10 +48,10 @@ horizontal_alignment = 1
 
 [node name="HighScore" type="Label" parent="Scoreboard"]
 layout_mode = 0
-offset_left = 227.0
-offset_top = 444.0
-offset_right = 682.0
-offset_bottom = 549.0
+offset_left = 236.0
+offset_top = 414.0
+offset_right = 691.0
+offset_bottom = 569.0
 theme_override_constants/line_spacing = 25
 theme_override_fonts/font = ExtResource("2_3b2b5")
 theme_override_font_sizes/font_size = 35
@@ -62,10 +62,10 @@ horizontal_alignment = 2
 
 [node name="Timer" type="Label" parent="Scoreboard"]
 layout_mode = 0
-offset_left = 280.0
-offset_top = 330.0
-offset_right = 680.0
-offset_bottom = 435.0
+offset_left = 289.0
+offset_top = 300.0
+offset_right = 689.0
+offset_bottom = 405.0
 theme_override_constants/line_spacing = 25
 theme_override_fonts/font = ExtResource("2_3b2b5")
 theme_override_font_sizes/font_size = 35
@@ -75,11 +75,11 @@ horizontal_alignment = 2
 
 [node name="PauseButtonContainer" type="VBoxContainer" parent="Scoreboard"]
 layout_mode = 2
-offset_left = 579.0
-offset_top = 61.0
-offset_right = 2334.0
-offset_bottom = 874.0
-scale = Vector2(0.065453, 0.0665404)
+offset_left = 543.0
+offset_top = 58.0
+offset_right = 2298.0
+offset_bottom = 871.0
+scale = Vector2(0.09, 0.093)
 
 [node name="PauseButton" type="TextureButton" parent="Scoreboard/PauseButtonContainer"]
 layout_mode = 2
@@ -89,10 +89,10 @@ texture_normal = ExtResource("3_vrfts")
 [node name="VolumeButtonContainer" type="VBoxContainer" parent="Scoreboard"]
 layout_mode = 0
 offset_left = 24.0
-offset_top = 59.0
+offset_top = 58.0
 offset_right = 1779.0
-offset_bottom = 872.0
-scale = Vector2(0.067116, 0.0603714)
+offset_bottom = 871.0
+scale = Vector2(0.087, 0.078)
 
 [node name="VolumeButton" type="TextureButton" parent="Scoreboard/VolumeButtonContainer"]
 layout_mode = 2

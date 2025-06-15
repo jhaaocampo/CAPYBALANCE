@@ -4,9 +4,9 @@
 [ext_resource type="Script" uid="uid://cm74rd08yc1w2" path="res://LandingPage.gd" id="1_ur3vi"]
 [ext_resource type="Texture2D" uid="uid://k0dctlkvytgf" path="res://capybalancelogo.png" id="2_ur3vi"]
 [ext_resource type="Texture2D" uid="uid://qtpr141yk62m" path="res://start button.png" id="3_ar278"]
-[ext_resource type="AudioStream" uid="uid://bgd4chsn2uv6y" path="res://Audio Asset/click button.mp3" id="3_l42u6"]
+[ext_resource type="AudioStream" uid="uid://cgkgtfkcmhgv2" path="res://Audio Asset/click button.mp3" id="3_l42u6"]
 [ext_resource type="Texture2D" uid="uid://vxtgskqapp4e" path="res://leave button.png" id="4_l42u6"]
-[ext_resource type="AudioStream" uid="uid://bl823xxq0ttus" path="res://Audio Asset/starting menu screen.mp3" id="7_ar278"]
+[ext_resource type="AudioStream" uid="uid://4a16lvyoxji8" path="res://Audio Asset/starting menu screen.mp3" id="7_ar278"]
 
 [node name="LandingPage" type="Control"]
 layout_mode = 3
@@ -43,12 +43,14 @@ expand_mode = 3
 
 [node name="Logo" type="TextureRect" parent="."]
 layout_mode = 0
-offset_left = -5.0
-offset_top = 11.0
-offset_right = 2020.0
-offset_bottom = 2036.0
+offset_left = 17.0
+offset_top = 155.0
+offset_right = 1932.0
+offset_bottom = 1356.0
 scale = Vector2(0.355578, 0.334725)
 texture = ExtResource("2_ur3vi")
+expand_mode = 2
+stretch_mode = 4
 
 [node name="StartButtonContainer" type="VBoxContainer" parent="."]
 layout_mode = 0

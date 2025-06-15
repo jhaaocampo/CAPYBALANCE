@@ -9,6 +9,9 @@ var time_remaining := 60.0
 var challenge_active := false
 var challenge_started := false
 var best_stack_height := 0
+var five_second_warning_played := false
+@onready var height_challenge_bgm = $HeightChallengeBGM
+@onready var five_second_warning = $FiveSecondWarning
 
 # Override the setup_scoreboard function to use the correct path
 func setup_scoreboard():
@@ -63,6 +66,11 @@ func setup_height_challenge_mode():
 func _ready():
 	super._ready()  # This will call Main's _ready, which calls setup_scoreboard
 	
+	drop_sound_base = get_node_or_null("DropSoundBase")
+	drop_sound_baby = get_node_or_null("DropSoundBaby") 
+	drop_sound_large = get_node_or_null("DropSoundLarge")
+	drop_sound_sleeping = get_node_or_null("DropSoundSleeping")
+	
 	time_remaining = challenge_duration
 	challenge_active = true
 	challenge_started = true
@@ -73,7 +81,8 @@ func _ready():
 	# Make sure scoreboard is in the right mode (in case setup_scoreboard ran before this)
 	if scoreboard:
 		setup_height_challenge_mode()
-
+	# Play BGM when height challenge starts
+	play_height_challenge_bgm()
 # Override _process to handle countdown timer
 func _process(delta):
 	# INTEGRATED FIX: Handle game over timer and restart - same as Main.gd
@@ -116,7 +125,17 @@ func _process(delta):
 	
 	# HEIGHT CHALLENGE SPECIFIC: Handle countdown timer
 	if challenge_active and challenge_started and scoreboard:
+		var previous_time = time_remaining
 		time_remaining -= delta
+		
+		if time_remaining <= 5.0 and time_remaining > 0.0 and not five_second_warning_played:
+			# Fade out BGM and play warning sound
+			if height_challenge_bgm and height_challenge_bgm.playing:
+				var tween = create_tween()
+				tween.tween_property(height_challenge_bgm, "volume_db", -80.0, 0.5)
+				tween.tween_callback(height_challenge_bgm.stop)
+			play_five_second_warning()
+			five_second_warning_played = true
 		
 		var current_height = capys_stack.size() if capys_stack else 0
 		
@@ -152,6 +171,19 @@ func finalize_capy_placement():
 		
 		# Add to stack
 		capys_stack.append(current_capy)
+				# Play specific capybara sound based on type
+		#play_capybara_land_sound(current_capy) 
+		
+		var capy_type = get_capy_type_name(current_capy)
+		match capy_type:
+			"BaseCapy":
+				play_base_sound()
+			"BabyCapy":
+				play_baby_sound()
+			"LargeCapy":
+				play_large_sound()
+			"SleepingCapy":
+				play_sleeping_sound()
 		
 		# Enhanced base stability
 		if capys_stack.size() == 1:
@@ -206,7 +238,7 @@ func trigger_game_over():
 		# Use the integrated game over logic from Main.gd
 		tipping_over = true
 		print("Game Over! Stack collapsed!")
-		
+		play_game_over_sound()
 		# Notify scoreboard of game over
 		if scoreboard and scoreboard.has_method("game_over"):
 			scoreboard.game_over()
@@ -230,6 +262,8 @@ func end_height_challenge():
 	challenge_active = false
 	challenge_started = false
 	time_remaining = 0.0
+	play_game_over_sound()
+	
 	
 	# Record the final stack height
 	var final_height = capys_stack.size()
@@ -270,3 +304,31 @@ func load_best_height():
 		save_file.close()
 	else:
 		best_stack_height = 0
+
+func play_height_challenge_bgm():
+	if not mute and height_challenge_bgm:
+		height_challenge_bgm.play()
+		
+func play_game_over_sound():
+	if not mute and game_over_sound:
+		game_over_sound.play()
+
+func play_base_sound():
+	if not mute and drop_sound_base:
+		drop_sound_base.play()
+
+func play_baby_sound():
+	if not mute and drop_sound_baby:
+		drop_sound_baby.play()
+
+func play_large_sound():
+	if not mute and drop_sound_large:
+		drop_sound_large.play()
+
+func play_sleeping_sound():
+	if not mute and drop_sound_sleeping:
+		drop_sound_sleeping.play()
+		
+func play_five_second_warning():
+	if not mute and five_second_warning:
+		five_second_warning.play()

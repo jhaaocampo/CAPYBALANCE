@@ -7,8 +7,8 @@
 [ext_resource type="Texture2D" uid="uid://lit1l4qsorqj" path="res://endless stack button.png" id="4_3e2kj"]
 [ext_resource type="Texture2D" uid="uid://cmlftdl7w58pn" path="res://back button.png" id="6_l782h"]
 [ext_resource type="FontFile" uid="uid://dv6rxjsqf5lyn" path="res://PressStart2P.ttf" id="8_3e2kj"]
-[ext_resource type="AudioStream" uid="uid://bl823xxq0ttus" path="res://Audio Asset/starting menu screen.mp3" id="9_uc2ct"]
-[ext_resource type="AudioStream" uid="uid://bgd4chsn2uv6y" path="res://Audio Asset/click button.mp3" id="10_a3mbt"]
+[ext_resource type="AudioStream" uid="uid://4a16lvyoxji8" path="res://Audio Asset/starting menu screen.mp3" id="9_uc2ct"]
+[ext_resource type="AudioStream" uid="uid://cgkgtfkcmhgv2" path="res://Audio Asset/click button.mp3" id="10_a3mbt"]
 
 [node name="ModeSelection" type="Control"]
 layout_mode = 3
@@ -26,11 +26,11 @@ offset_bottom = 40.0
 
 [node name="Label" type="Label" parent="GameModeText"]
 layout_mode = 0
-offset_left = 42.0
+offset_left = 71.0
 offset_top = 618.0
-offset_right = 1032.0
+offset_right = 1061.0
 offset_bottom = 767.0
-scale = Vector2(0.651614, 0.651361)
+scale = Vector2(0.587, 0.586)
 theme_override_colors/font_color = Color(1, 0.788235, 0.0823529, 1)
 theme_override_colors/font_shadow_color = Color(0.568973, 0.568973, 0.568973, 1)
 theme_override_fonts/font = ExtResource("8_3e2kj")
@@ -56,21 +56,22 @@ texture = ExtResource("1_iynnj")
 expand_mode = 3
 
 [node name="Logo" type="TextureRect" parent="."]
-layout_mode = 0
-offset_left = -5.0
-offset_top = 11.0
-offset_right = 2020.0
-offset_bottom = 2036.0
+offset_left = 17.0
+offset_top = 155.0
+offset_right = 1932.0
+offset_bottom = 1356.0
 scale = Vector2(0.355578, 0.334725)
 texture = ExtResource("2_l782h")
+expand_mode = 2
+stretch_mode = 4
 
 [node name="HeightChallengeButtonContainer" type="VBoxContainer" parent="."]
 layout_mode = 0
-offset_left = 139.0
-offset_top = 776.0
-offset_right = 1759.0
-offset_bottom = 2396.0
-scale = Vector2(0.264258, 0.205908)
+offset_left = 111.0
+offset_top = 724.0
+offset_right = 1731.0
+offset_bottom = 2344.0
+scale = Vector2(0.309, 0.286)
 theme_override_constants/separation = 30
 
 [node name="HeightChallengeButton" type="TextureButton" parent="HeightChallengeButtonContainer"]
@@ -80,11 +81,11 @@ texture_normal = ExtResource("3_yrymw")
 
 [node name="EndlessStackButtonContainer" type="VBoxContainer" parent="."]
 layout_mode = 0
-offset_left = 140.0
-offset_top = 895.0
-offset_right = 1760.0
-offset_bottom = 1645.0
-scale = Vector2(0.265543, 0.218205)
+offset_left = 112.0
+offset_top = 876.0
+offset_right = 1732.0
+offset_bottom = 1626.0
+scale = Vector2(0.309, 0.286)
 
 [node name="EndlessStackButton" type="TextureButton" parent="EndlessStackButtonContainer"]
 layout_mode = 2
@@ -93,11 +94,11 @@ texture_normal = ExtResource("4_3e2kj")
 
 [node name="BackButtonContainer" type="VBoxContainer" parent="."]
 layout_mode = 0
-offset_left = 41.0
-offset_top = 94.0
-offset_right = 1661.0
-offset_bottom = 844.0
-scale = Vector2(0.078019, 0.0724462)
+offset_left = 7.0
+offset_top = 78.0
+offset_right = 1627.0
+offset_bottom = 828.0
+scale = Vector2(0.123, 0.114)
 
 [node name="BackButton" type="TextureButton" parent="BackButtonContainer"]
 layout_mode = 2

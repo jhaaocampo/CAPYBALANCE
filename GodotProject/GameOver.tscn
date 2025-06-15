@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://vemh6wr0oru1"]
+[gd_scene load_steps=10 format=3 uid="uid://vemh6wr0oru1"]
 
 [ext_resource type="FontFile" uid="uid://dv6rxjsqf5lyn" path="res://PressStart2P.ttf" id="1_3y56u"]
 [ext_resource type="Script" uid="uid://byf2mmmx6gj02" path="res://GameOver.gd" id="1_ua7od"]
@@ -6,8 +6,9 @@
 [ext_resource type="Texture2D" uid="uid://d3wot3t2r31c7" path="res://Gameover box.png" id="4_758bs"]
 [ext_resource type="Texture2D" uid="uid://dk5ssdj0jlq7m" path="res://Replay button.png" id="5_rr04i"]
 [ext_resource type="Texture2D" uid="uid://vxtgskqapp4e" path="res://leave button.png" id="6_067b4"]
-[ext_resource type="AudioStream" uid="uid://dimv1uh87h4m" path="res://Audio Asset/done (height challenge).mp3" id="8_3fonj"]
-[ext_resource type="AudioStream" uid="uid://bgd4chsn2uv6y" path="res://Audio Asset/click button.mp3" id="10_rr04i"]
+[ext_resource type="AudioStream" uid="uid://i6kpeimqm2xf" path="res://Audio Asset/done (height challenge).mp3" id="8_3fonj"]
+[ext_resource type="AudioStream" uid="uid://dmyipyvxo66j3" path="res://Audio Asset/RegularGameOverSound.mp3" id="8_758bs"]
+[ext_resource type="AudioStream" uid="uid://cgkgtfkcmhgv2" path="res://Audio Asset/click button.mp3" id="10_rr04i"]
 
 [node name="GameOver" type="Control"]
 layout_mode = 3
@@ -27,9 +28,9 @@ offset_bottom = 40.0
 [node name="Label" type="Label" parent="GameModeText"]
 layout_mode = 0
 offset_left = 47.0
-offset_top = 445.0
+offset_top = 443.0
 offset_right = 1037.0
-offset_bottom = 594.0
+offset_bottom = 592.0
 scale = Vector2(0.651614, 0.651361)
 theme_override_colors/font_color = Color(1, 0.788235, 0.0823529, 1)
 theme_override_colors/font_shadow_color = Color(0.568973, 0.568973, 0.568973, 1)
@@ -40,13 +41,14 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Logo" type="TextureRect" parent="."]
-layout_mode = 0
-offset_left = -7.0
-offset_top = -105.0
-offset_right = 2018.0
-offset_bottom = 1920.0
+offset_left = 18.0448
+offset_top = 50.8824
+offset_right = 1933.04
+offset_bottom = 1251.88
 scale = Vector2(0.355578, 0.334725)
 texture = ExtResource("3_3fonj")
+expand_mode = 2
+stretch_mode = 4
 
 [node name="Box" type="TextureRect" parent="."]
 layout_mode = 0
@@ -59,11 +61,11 @@ texture = ExtResource("4_758bs")
 
 [node name="ReplayButtonContainer" type="VBoxContainer" parent="."]
 layout_mode = 0
-offset_left = 230.0
-offset_top = 1003.0
-offset_right = 1985.0
-offset_bottom = 2623.0
-scale = Vector2(0.139891, 0.11173)
+offset_left = 187.0
+offset_top = 997.0
+offset_right = 1942.0
+offset_bottom = 2617.0
+scale = Vector2(0.19, 0.15)
 theme_override_constants/separation = 30
 
 [node name="ReplayButton" type="TextureButton" parent="ReplayButtonContainer"]
@@ -73,11 +75,11 @@ texture_normal = ExtResource("5_rr04i")
 
 [node name="LeaveButtonContainer" type="VBoxContainer" parent="."]
 layout_mode = 0
-offset_left = 288.0
-offset_top = 1103.0
-offset_right = 1908.0
-offset_bottom = 1853.0
-scale = Vector2(0.0836657, 0.0803381)
+offset_left = 269.0
+offset_top = 1124.0
+offset_right = 1889.0
+offset_bottom = 1874.0
+scale = Vector2(0.11, 0.106)
 
 [node name="LeaveButton" type="TextureButton" parent="LeaveButtonContainer"]
 layout_mode = 2
@@ -141,6 +143,10 @@ horizontal_alignment = 1
 stream = ExtResource("8_3fonj")
 
 [node name="LeavingSound" type="AudioStreamPlayer2D" parent="."]
+
+[node name="RegularGameOverSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("8_758bs")
+volume_db = 9.0
 
 [node name="ButtonSound" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("10_rr04i")

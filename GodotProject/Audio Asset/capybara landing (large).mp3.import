@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://b8p7kqs872n0b"
+path="res://.godot/imported/capybara landing (large).mp3-ecb94af466344c6f0a61355daa352ade.mp3str"
+
+[deps]
+
+source_file="res://Audio Asset/capybara landing (large).mp3"
+dest_files=["res://.godot/imported/capybara landing (large).mp3-ecb94af466344c6f0a61355daa352ade.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

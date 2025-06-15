@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://4a16lvyoxji8"
+path="res://.godot/imported/starting menu screen.mp3-304d0d8810993a66c043bc6a045c06b9.mp3str"
+
+[deps]
+
+source_file="res://Audio Asset/starting menu screen.mp3"
+dest_files=["res://.godot/imported/starting menu screen.mp3-304d0d8810993a66c043bc6a045c06b9.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
